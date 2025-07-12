@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=3 uid="uid://clhqh1vxjbgkv"]
+
+[ext_resource type="Script" path="res://scripts/core/GameManager.gd" id="1_2k8sp"]
+[ext_resource type="Script" path="res://scripts/core/CameraController.gd" id="2_y4k1p"]
+[ext_resource type="PackedScene" path="res://scenes/levels/TestLevel.tscn" id="3_m5n8q"]
+
+[sub_resource type="Environment" id="Environment_1hj3k"]
+background_mode = 1
+background_color = Color(0.5, 0.7, 0.9, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.3
+
+[node name="Main" type="Node3D"]
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("1_2k8sp")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="CameraController" type="Node3D" parent="."]
+script = ExtResource("2_y4k1p")
+
+[node name="Camera3D" type="Camera3D" parent="CameraController"]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 10)
+projection = 1
+size = 20.0
+far = 100.0
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="TestLevel" parent="Level" instance=ExtResource("3_m5n8q")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1hj3k")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true

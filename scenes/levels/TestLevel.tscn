@@ -1,0 +1,90 @@
+[gd_scene load_steps=7 format=3 uid="uid://d1xqh1vxjbgkv"]
+
+[ext_resource type="Script" path="res://scripts/core/BusStop.gd" id="1_busstop"]
+[ext_resource type="PackedScene" path="res://scenes/buses/PlayerBus.tscn" id="2_playerbus"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(50, 0.1, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(50, 0.1, 50)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_busstop"]
+radius = 3.0
+
+[sub_resource type="Timer" id="Timer_spawn"]
+
+[node name="TestLevel" type="Node3D"]
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_ground")
+
+[node name="Roads" type="Node3D" parent="."]
+
+[node name="MainRoad" type="StaticBody3D" parent="Roads"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Roads/MainRoad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Roads/MainRoad"]
+
+[node name="BusStops" type="Node3D" parent="."]
+
+[node name="BusStop1" type="Node3D" parent="BusStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -10)
+script = ExtResource("1_busstop")
+stop_name = "Downtown Station"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BusStops/BusStop1"]
+
+[node name="Area3D" type="Area3D" parent="BusStops/BusStop1"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BusStops/BusStop1/Area3D"]
+shape = SubResource("SphereShape3D_busstop")
+
+[node name="SpawnTimer" type="Timer" parent="BusStops/BusStop1"]
+wait_time = 10.0
+autostart = true
+
+[node name="BusStop2" type="Node3D" parent="BusStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+script = ExtResource("1_busstop")
+stop_name = "Shopping Mall"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BusStops/BusStop2"]
+
+[node name="Area3D" type="Area3D" parent="BusStops/BusStop2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BusStops/BusStop2/Area3D"]
+shape = SubResource("SphereShape3D_busstop")
+
+[node name="SpawnTimer" type="Timer" parent="BusStops/BusStop2"]
+wait_time = 10.0
+autostart = true
+
+[node name="BusStop3" type="Node3D" parent="BusStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 15)
+script = ExtResource("1_busstop")
+stop_name = "University"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BusStops/BusStop3"]
+
+[node name="Area3D" type="Area3D" parent="BusStops/BusStop3"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BusStops/BusStop3/Area3D"]
+shape = SubResource("SphereShape3D_busstop")
+
+[node name="SpawnTimer" type="Timer" parent="BusStops/BusStop3"]
+wait_time = 10.0
+autostart = true
+
+[node name="Vehicles" type="Node3D" parent="."]
+
+[node name="PlayerBus" parent="Vehicles" instance=ExtResource("2_playerbus")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
