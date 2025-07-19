@@ -1,0 +1,78 @@
+[gd_scene load_steps=11 format=4 uid="uid://dtunvn6ti05no"]
+
+[ext_resource type="Script" uid="uid://7dbb3nl75cp5" path="res://levels/city.gd" id="1_67foa"]
+[ext_resource type="Texture2D" uid="uid://o6lab4d38llb" path="res://2dcitywithoutline/citysecondprops/strokecitysecondcityprops0008.png" id="1_ekj3e"]
+[ext_resource type="Texture2D" uid="uid://bdx6p7otqyvaq" path="res://2dcitywithoutline/grounds/strokegrounds0008.png" id="1_n8ykr"]
+[ext_resource type="PackedScene" uid="uid://bsm1d6k3q45ei" path="res://levels/background_terrain.tscn" id="1_wpki0"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n8ykr"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wpki0"]
+texture = ExtResource("1_n8ykr")
+margins = Vector2i(285, 153)
+texture_region_size = Vector2i(512, 256)
+use_texture_padding = false
+1:6/0 = 0
+1:6/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -128, -256, 0, 0, 128, 256, 0)
+
+[sub_resource type="TileSet" id="TileSet_l1jis"]
+tile_shape = 1
+tile_size = Vector2i(512, 256)
+physics_layer_0/collision_layer = 1
+physics_layer_0/physics_material = SubResource("PhysicsMaterial_n8ykr")
+sources/0 = SubResource("TileSetAtlasSource_wpki0")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_67foa"]
+texture = ExtResource("1_ekj3e")
+margins = Vector2i(362, 135)
+texture_region_size = Vector2i(456, 282)
+use_texture_padding = false
+1:2/next_alternative_id = 4
+1:2/0 = 0
+1:2/1 = 1
+1:2/1/flip_h = true
+1:2/2 = 2
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_js2ni"]
+texture = ExtResource("1_ekj3e")
+margins = Vector2i(252, 112)
+texture_region_size = Vector2i(512, 256)
+use_texture_padding = false
+1:4/next_alternative_id = 2
+1:4/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_5qyid"]
+tile_shape = 1
+tile_layout = 5
+tile_size = Vector2i(512, 256)
+terrain_set_0/mode = 0
+terrain_set_0/terrain_0/name = "Terrain 0"
+terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
+sources/4 = SubResource("TileSetAtlasSource_67foa")
+sources/5 = SubResource("TileSetAtlasSource_js2ni")
+
+[node name="city" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_67foa")
+
+[node name="background_terrain" parent="." instance=ExtResource("1_wpki0")]
+
+[node name="terrain" type="TileMapLayer" parent="."]
+z_index = 1
+y_sort_enabled = true
+use_parent_material = true
+tile_map_data = PackedByteArray("AAAAAAMAAAABAAYAAAAAAAQAAAABAAYAAAD//wUAAAABAAYAAAAAAAYAAAABAAYAAAAAAAcAAAABAAYAAAABAAYAAAABAAYAAAABAAUAAAABAAYAAAABAAQAAAABAAYAAAD+/wcAAAABAAYAAAD//wgAAAABAAYAAAD//wkAAAABAAYAAAAAAAoAAAABAAYAAAABAAoAAAABAAYAAAABAAkAAAABAAYAAAACAAgAAAABAAYAAAACAAcAAAABAAYAAAADAAYAAAABAAYAAAD+/wYAAAABAAYAAAD+/wQAAAABAAYAAAD+/wMAAAABAAYAAAD//wIAAAABAAYAAAD//wEAAAABAAYAAAD//wAAAAABAAYAAAD+////AAABAAYAAAD///3/AAABAAYAAAAAAP7/AAABAAYAAAAAAP//AAABAAYAAAABAP7/AAABAAYAAAABAP3/AAABAAYAAAACAP//AAABAAYAAAACAAAAAAABAAYAAAABAAEAAAABAAYAAAACAAIAAAABAAYAAAACAAMAAAABAAYAAAADAAQAAAABAAYAAAD+//7/AAABAAYAAAD+//z/AAABAAYAAAD+//v/AAABAAYAAAD///r/AAABAAYAAAAAAPz/AAABAAYAAAAAAPr/AAABAAYAAAABAPr/AAABAAYAAAABAPz/AAABAAYAAAACAPr/AAABAAYAAAACAPv/AAABAAYAAAADAPz/AAABAAYAAAADAP7/AAABAAYAAAA=")
+tile_set = SubResource("TileSet_l1jis")
+x_draw_order_reversed = true
+
+[node name="roads" type="TileMapLayer" parent="."]
+z_index = 2
+y_sort_enabled = true
+use_parent_material = true
+position = Vector2(-58, 16)
+tile_map_data = PackedByteArray("AAABAAQABQABAAQAAAABAAAABQABAAQAAAAFAAAABQABAAQAAAD9/wAABQABAAQAAAABAPz/BQABAAQAAAABAAMABAABAAIAAQABAAIABAABAAIAAQABAAEABAABAAIAAQABAP//BAABAAIAAQABAP7/BAABAAIAAQABAP3/BAABAAIAAQAFAAMABAABAAIAAQAFAAIABAABAAIAAQAFAAEABAABAAIAAQAFAAQABQABAAQAAAAEAAQABAABAAIAAgADAAQABAABAAIAAgACAAQABAABAAIAAgAAAAAABAABAAIAAgD//wAABAABAAIAAgD+/wAABAABAAIAAgD///z/BAABAAIAAgAAAPz/BAABAAIAAgAEAAAABAABAAIAAgADAAAABAABAAIAAgACAAAABAABAAIAAgD9//7/BAABAAIAAQD9////BAABAAIAAQA=")
+tile_set = SubResource("TileSet_5qyid")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(-547, 763)
+zoom = Vector2(0.4, 0.4)
