@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://clhqh1vxjbgkv"]
+[gd_scene load_steps=7 format=3 uid="uid://clhqh1vxjbgkv"]
 
 [ext_resource type="Script" path="res://scripts/core/GameManager.gd" id="1_2k8sp"]
 [ext_resource type="Script" path="res://scripts/core/CameraController.gd" id="2_y4k1p"]
 [ext_resource type="PackedScene" path="res://scenes/levels/TestLevel.tscn" id="3_m5n8q"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ControlsUI.tscn" id="4_controls"]
+[ext_resource type="Script" path="res://scripts/core/MainController.gd" id="5_main_controller"]
 
 [sub_resource type="Environment" id="Environment_1hj3k"]
 background_mode = 1
@@ -12,11 +14,14 @@ ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.3
 
 [node name="Main" type="Node3D"]
+script = ExtResource("5_main_controller")
 
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("1_2k8sp")
 
 [node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ControlsUI" parent="UI" instance=ExtResource("4_controls")]
 
 [node name="CameraController" type="Node3D" parent="."]
 script = ExtResource("2_y4k1p")

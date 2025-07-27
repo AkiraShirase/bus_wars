@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvxh1vxjbgkv"]
+
+[ext_resource type="Script" path="res://scripts/ui/ControlsUI.gd" id="1_controls"]
+
+[node name="ControlsUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_controls")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -150.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Bus Controls"
+horizontal_alignment = 1
+
+[node name="AccelerateBrakeContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AccelerateButton" type="Button" parent="VBoxContainer/AccelerateBrakeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Accelerate"
+
+[node name="BrakeButton" type="Button" parent="VBoxContainer/AccelerateBrakeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Brake"
+
+[node name="SteeringContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="SteerLeftButton" type="Button" parent="VBoxContainer/SteeringContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "◀ Left"
+
+[node name="SteerRightButton" type="Button" parent="VBoxContainer/SteeringContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Right ▶"

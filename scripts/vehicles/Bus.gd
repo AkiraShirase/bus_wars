@@ -18,6 +18,12 @@ var steering_input: float = 0.0
 var current_route: Array[Vector3] = []
 var current_route_index: int = 0
 
+# Button input states
+var button_accelerate_pressed: bool = false
+var button_brake_pressed: bool = false
+var button_steer_left_pressed: bool = false
+var button_steer_right_pressed: bool = false
+
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
@@ -40,14 +46,21 @@ func handle_input():
 	acceleration_input = 0.0
 	steering_input = 0.0
 	
-	if Input.is_action_pressed("accelerate"):
+	# Handle keyboard input
+	var keyboard_accelerate = Input.is_action_pressed("accelerate")
+	var keyboard_brake = Input.is_action_pressed("brake")
+	var keyboard_steer_left = Input.is_action_pressed("steer_left")
+	var keyboard_steer_right = Input.is_action_pressed("steer_right")
+	
+	# Combine keyboard and button inputs
+	if keyboard_accelerate or button_accelerate_pressed:
 		acceleration_input = 1.0
-	elif Input.is_action_pressed("brake"):
+	elif keyboard_brake or button_brake_pressed:
 		acceleration_input = -1.0
 	
-	if Input.is_action_pressed("steer_left"):
+	if keyboard_steer_left or button_steer_left_pressed:
 		steering_input = -1.0
-	elif Input.is_action_pressed("steer_right"):
+	elif keyboard_steer_right or button_steer_right_pressed:
 		steering_input = 1.0
 
 func apply_engine_force(delta):
@@ -101,3 +114,28 @@ func create_bus_mesh():
 func _on_tree_exiting():
 	if GameManager:
 		GameManager.unregister_bus(self)
+
+# Button input methods
+func on_accelerate_pressed():
+	button_accelerate_pressed = true
+
+func on_accelerate_released():
+	button_accelerate_pressed = false
+
+func on_brake_pressed():
+	button_brake_pressed = true
+
+func on_brake_released():
+	button_brake_pressed = false
+
+func on_steer_left_pressed():
+	button_steer_left_pressed = true
+
+func on_steer_left_released():
+	button_steer_left_pressed = false
+
+func on_steer_right_pressed():
+	button_steer_right_pressed = true
+
+func on_steer_right_released():
+	button_steer_right_pressed = false
