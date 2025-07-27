@@ -29,6 +29,11 @@ var button_steer_right_pressed: bool = false
 
 func _ready():
 	mass = weight
+	# Set RigidBody3D properties for proper physics
+	gravity_scale = 1.0
+	# Set collision layers - bus should be on layer 2 and collide with environment (layer 1)
+	collision_layer = 2  # Buses layer
+	collision_mask = 1   # Collide with Environment layer
 	create_bus_mesh()
 	# Register with GameManager after the scene tree is ready
 	call_deferred("_register_with_game_manager")
