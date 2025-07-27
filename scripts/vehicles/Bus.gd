@@ -23,8 +23,12 @@ var current_route_index: int = 0
 
 func _ready():
 	mass = weight
-	GameManager.register_bus(self)
 	create_bus_mesh()
+	# Register with GameManager after the scene tree is ready
+	call_deferred("_register_with_game_manager")
+
+func _register_with_game_manager():
+	GameManager.register_bus(self)
 
 func _physics_process(delta):
 	handle_input()
@@ -95,4 +99,5 @@ func create_bus_mesh():
 	collision_shape.shape = box_shape
 
 func _on_tree_exiting():
-	GameManager.unregister_bus(self)
+	if GameManager:
+		GameManager.unregister_bus(self)

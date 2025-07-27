@@ -67,6 +67,10 @@ camera_zoom_out={
 3d_physics/layer_5="Passengers"
 3d_physics/layer_6="BusStops"
 
+[autoload]
+
+GameManager="*res://scripts/core/GameManager.gd"
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

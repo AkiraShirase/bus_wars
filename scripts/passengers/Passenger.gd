@@ -51,7 +51,8 @@ func exit_bus():
 		
 		if destination_stop:
 			arrived_at_destination.emit()
-			GameManager.passenger_transported()
+			if GameManager:
+				GameManager.passenger_transported()
 
 func set_destination(stop: Node):
 	destination_stop = stop

@@ -20,10 +20,14 @@ var passenger_scene = preload("res://scenes/characters/Passenger.tscn")
 @onready var spawn_timer: Timer = $SpawnTimer
 
 func _ready():
-	GameManager.register_bus_stop(self)
 	create_bus_stop_mesh()
 	setup_detection_area()
 	setup_passenger_spawning()
+	# Register with GameManager after the scene tree is ready
+	call_deferred("_register_with_game_manager")
+
+func _register_with_game_manager():
+	GameManager.register_bus_stop(self)
 
 func create_bus_stop_mesh():
 	var cylinder_mesh = CylinderMesh.new()

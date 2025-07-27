@@ -12,8 +12,6 @@ size = Vector3(50, 0.1, 50)
 [sub_resource type="SphereShape3D" id="SphereShape3D_busstop"]
 radius = 3.0
 
-[sub_resource type="Timer" id="Timer_spawn"]
-
 [node name="TestLevel" type="Node3D"]
 
 [node name="Ground" type="StaticBody3D" parent="."]
