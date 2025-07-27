@@ -22,6 +22,8 @@ script = ExtResource("1_2k8sp")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="ControlsUI" parent="UI" instance=ExtResource("4_controls")]
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="CameraController" type="Node3D" parent="."]
 script = ExtResource("2_y4k1p")
