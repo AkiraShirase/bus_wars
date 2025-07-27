@@ -8,23 +8,23 @@ extends Node2D
 
 func _process(delta):
 	# Start with a zero vector for velocity.
-	var velocity = Vector2.ZERO
+	#var velocity = Vector2.ZERO
 	# Handle horizontal movement (x-axis).
-	if Input.is_action_pressed("steer_right"):
-		velocity.x += 1
+	#if Input.is_action_pressed("steer_right"):
+	#	velocity.x += 1
 
-	if Input.is_action_pressed("steer_left"):
-		velocity.x -= 1
+	#if Input.is_action_pressed("steer_left"):
+	#	velocity.x -= 1
 
 	# Handle vertical movement (y-axis).
-	if Input.is_action_pressed("brake"):
-		velocity.y += 1 # Moves down
-	if Input.is_action_pressed("accelerate"):
-		velocity.y -= 1 # Moves up
+	#if Input.is_action_pressed("brake"):
+	#	velocity.y += 1 # Moves down
+	#if Input.is_action_pressed("accelerate"):
+	#	velocity.y -= 1 # Moves up
 
 	# Normalize the velocity to prevent faster diagonal movement
 	# and then apply speed and delta time.
-	velocity = velocity.normalized() * move_speed * delta
+	#velocity = velocity.normalized() * move_speed * delta
 
 	# Update the camera's position.
-	camera_2d.position += velocity
+	#camera_2d.position += velocity
