@@ -15,7 +15,6 @@ radius = 3.0
 [node name="TestLevel" type="Node3D"]
 
 [node name="Ground" type="StaticBody3D" parent="."]
-collision_layer = 1
 collision_mask = 0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]

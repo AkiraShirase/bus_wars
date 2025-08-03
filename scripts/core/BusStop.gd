@@ -57,14 +57,14 @@ func _on_spawn_timer_timeout():
 
 func spawn_passenger():
 	var passenger = passenger_scene.instantiate() as Passenger
-	passenger.global_position = global_position + Vector3(
-		randf_range(-2, 2), 0, randf_range(-2, 2)
-	)
 	
 	passenger.danger_level = danger_level + randf_range(-0.1, 0.1)
 	passenger.faith_level = faith_level + randf_range(-0.1, 0.1)
 	
 	get_parent().add_child(passenger)
+	passenger.global_position = global_position + Vector3(
+		randf_range(-2, 2), 0, randf_range(-2, 2)
+	)
 	waiting_passengers.append(passenger)
 	passenger_spawned.emit(passenger)
 
