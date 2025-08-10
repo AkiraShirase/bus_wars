@@ -64,6 +64,16 @@ class_name IsometricRoad
 		show_direction_handles = value
 		queue_redraw()
 
+@export var align_ends_to_grid: bool = true:
+	set(value):
+		align_ends_to_grid = value
+		update_road_geometry()
+
+@export var show_end_caps: bool = true:
+	set(value):
+		show_end_caps = value
+		update_road_geometry()
+
 # Road markings
 @export_group("Road Markings")
 @export var show_center_line: bool = true:
@@ -86,31 +96,70 @@ var sidewalk_left: Line2D
 var sidewalk_right: Line2D
 var center_line: Line2D
 var marking_lines: Array[Line2D] = []
+var end_cap_start: Polygon2D
+var end_cap_end: Polygon2D
+
+func _enter_tree():
+	# Find existing child nodes
+	if has_node("SidewalkLeft"):
+		sidewalk_left = get_node("SidewalkLeft")
+	if has_node("SidewalkRight"):
+		sidewalk_right = get_node("SidewalkRight")
+	if has_node("EndCapStart"):
+		end_cap_start = get_node("EndCapStart")
+	if has_node("EndCapEnd"):
+		end_cap_end = get_node("EndCapEnd")
 
 func _ready():
 	# Set initial properties
 	width = road_width
 	default_color = road_color
 	joint_mode = Line2D.LINE_JOINT_ROUND
+	# cap_mode is only available in newer versions
+	if "cap_mode" in self:
+		set("cap_mode", Line2D.LINE_CAP_ROUND)
 	
-	# Create child elements
-	if Engine.is_editor_hint():
-		setup_child_elements()
+	# Create child elements for both editor and game
+	setup_child_elements()
 
 func setup_child_elements():
-	# Create sidewalks
+	# Create sidewalks if they don't exist
 	if not sidewalk_left:
 		sidewalk_left = Line2D.new()
 		sidewalk_left.name = "SidewalkLeft"
 		add_child(sidewalk_left)
+		# Make sure the node is saved with the scene
+		if Engine.is_editor_hint():
+			sidewalk_left.owner = get_tree().edited_scene_root
 		
 	if not sidewalk_right:
 		sidewalk_right = Line2D.new()
 		sidewalk_right.name = "SidewalkRight"
 		add_child(sidewalk_right)
+		# Make sure the node is saved with the scene
+		if Engine.is_editor_hint():
+			sidewalk_right.owner = get_tree().edited_scene_root
+	
+	# Create end caps for proper isometric cuts
+	if not end_cap_start:
+		end_cap_start = Polygon2D.new()
+		end_cap_start.name = "EndCapStart"
+		end_cap_start.color = road_color
+		add_child(end_cap_start)
+		if Engine.is_editor_hint():
+			end_cap_start.owner = get_tree().edited_scene_root
+	
+	if not end_cap_end:
+		end_cap_end = Polygon2D.new()
+		end_cap_end.name = "EndCapEnd"
+		end_cap_end.color = road_color
+		add_child(end_cap_end)
+		if Engine.is_editor_hint():
+			end_cap_end.owner = get_tree().edited_scene_root
 	
 	update_sidewalks()
 	update_markings()
+	update_road_geometry()
 
 func _draw():
 	if not Engine.is_editor_hint():
@@ -313,6 +362,106 @@ func update_markings():
 		line.z_index = z_index + 1
 		add_child(line)
 		marking_lines.append(line)
+
+func update_road_geometry():
+	if not end_cap_start or not end_cap_end:
+		return
+	
+	end_cap_start.visible = show_end_caps and align_ends_to_grid
+	end_cap_end.visible = show_end_caps and align_ends_to_grid
+	
+	if not show_end_caps or not align_ends_to_grid or points.size() < 2:
+		return
+	
+	# Update end cap colors
+	end_cap_start.color = road_color
+	end_cap_end.color = road_color
+	
+	# Calculate isometric grid angles
+	var iso_angle_1 = deg_to_rad(isometric_angle)
+	var iso_angle_2 = deg_to_rad(isometric_angle + 90)
+	var iso_angle_3 = deg_to_rad(isometric_angle + 180)
+	var iso_angle_4 = deg_to_rad(isometric_angle + 270)
+	
+	# Start cap
+	var start_point = points[0]
+	var start_direction = (points[1] - points[0]).normalized()
+	var start_perpendicular = Vector2(-start_direction.y, start_direction.x)
+	
+	# Find best isometric angle for start cap
+	var start_cap_angle = find_best_isometric_angle(start_direction)
+	var start_cap_dir = Vector2.from_angle(start_cap_angle)
+	
+	# Create start cap polygon
+	var start_cap_points = PackedVector2Array()
+	var half_width = road_width / 2
+	
+	# Calculate cap points
+	var p1 = start_point + start_perpendicular * half_width
+	var p2 = start_point - start_perpendicular * half_width
+	var p3 = p2 - start_cap_dir * 10  # Extend slightly for clean cut
+	var p4 = p1 - start_cap_dir * 10
+	
+	start_cap_points.append(p1)
+	start_cap_points.append(p2)
+	start_cap_points.append(p3)
+	start_cap_points.append(p4)
+	
+	end_cap_start.polygon = start_cap_points
+	
+	# End cap
+	var end_point = points[points.size() - 1]
+	var end_direction = (points[points.size() - 1] - points[points.size() - 2]).normalized()
+	var end_perpendicular = Vector2(-end_direction.y, end_direction.x)
+	
+	# Find best isometric angle for end cap
+	var end_cap_angle = find_best_isometric_angle(-end_direction)
+	var end_cap_dir = Vector2.from_angle(end_cap_angle)
+	
+	# Create end cap polygon
+	var end_cap_points = PackedVector2Array()
+	
+	# Calculate cap points
+	var p5 = end_point + end_perpendicular * half_width
+	var p6 = end_point - end_perpendicular * half_width
+	var p7 = p6 - end_cap_dir * 10
+	var p8 = p5 - end_cap_dir * 10
+	
+	end_cap_points.append(p5)
+	end_cap_points.append(p6)
+	end_cap_points.append(p7)
+	end_cap_points.append(p8)
+	
+	end_cap_end.polygon = end_cap_points
+
+func find_best_isometric_angle(direction: Vector2) -> float:
+	# Get the angle of the direction
+	var dir_angle = direction.angle()
+	
+	# Define isometric grid angles (8 directions)
+	var grid_angles = []
+	for i in range(8):
+		grid_angles.append(deg_to_rad(isometric_angle + i * 45))
+	
+	# Find closest grid angle
+	var best_angle = grid_angles[0]
+	var min_diff = abs(angle_difference(dir_angle, grid_angles[0]))
+	
+	for angle in grid_angles:
+		var diff = abs(angle_difference(dir_angle, angle))
+		if diff < min_diff:
+			min_diff = diff
+			best_angle = angle
+	
+	return best_angle
+
+func angle_difference(a: float, b: float) -> float:
+	var diff = b - a
+	while diff > PI:
+		diff -= TAU
+	while diff < -PI:
+		diff += TAU
+	return diff
 
 func get_point_at_distance(distance: float) -> Vector2:
 	if points.size() < 2:

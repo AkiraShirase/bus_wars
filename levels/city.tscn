@@ -46,20 +46,24 @@ enabled = false
 zoom = Vector2(0.4, 0.4)
 script = ExtResource("4_js2ni")
 target_path = NodePath("../truck")
+zoom_level = Vector2(1.5, 1.5)
 
 [node name="truck" parent="." instance=ExtResource("5_js2ni")]
 z_index = 3
-position = Vector2(-1113, 939)
+position = Vector2(-1201, 963)
+start_direction = 6
 vector_scale = 3.0
 
-[node name="Line2D" parent="." instance=ExtResource("5_5qyid")]
-points = PackedVector2Array(-1345.22, 686.921, -543.811, 1087.62, -1230.73, 1459.71, -2003.52, 1001.76)
-closed = true
-width = 64.0
-default_color = Color(0.535542, 0.0164582, 0.366856, 1)
-joint_mode = 2
-road_width = 64.0
-road_color = Color(0.535542, 0.0164582, 0.366856, 1)
+[node name="Road" parent="." instance=ExtResource("5_5qyid")]
+position = Vector2(5, -65)
+points = PackedVector2Array(-505, 1102, -1155, 1424, -2003.52, 1001.76, -1363, 674, -936, 891, -1291, 1070)
+width = 128.0
+default_color = Color(0.0557858, 0.163021, 0.216079, 1)
+road_width = 128.0
+road_color = Color(0.0557858, 0.163021, 0.216079, 1)
+sidewalk_width = 32.0
 sidewalk_color = Color(1, 0.357369, 0.0475251, 1)
 grid_size = 64.0
 grid_color = Color(0.915812, 0, 0.419096, 1)
+align_ends_to_grid = null
+show_end_caps = null

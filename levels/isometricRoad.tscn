@@ -3,4 +3,9 @@
 [ext_resource type="Script" uid="uid://bf2muufah5qbv" path="res://levels/isometricRoad.gd" id="1_mem46"]
 
 [node name="Line2D" type="Line2D"]
+width = 60.0
+default_color = Color(0.3, 0.3, 0.3, 1)
+joint_mode = 2
 script = ExtResource("1_mem46")
+align_ends_to_grid = null
+show_end_caps = null

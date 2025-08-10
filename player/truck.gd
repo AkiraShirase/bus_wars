@@ -265,6 +265,9 @@ func _draw():
 	
 	draw_string(font, Vector2(20, y_offset), "Speed: %d" % int(velocity.length()), 
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+
+	draw_string(font, Vector2(20, y_offset + 20), "Angle: %d" % int(rad_to_deg(visual_rotation)), 
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
 	
 	if show_tile_position:
 		y_offset -= 20
