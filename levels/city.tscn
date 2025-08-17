@@ -1,44 +1,112 @@
-[gd_scene load_steps=9 format=3 uid="uid://dtunvn6ti05no"]
+[gd_scene load_steps=23 format=3 uid="uid://dtunvn6ti05no"]
 
 [ext_resource type="PackedScene" uid="uid://bsm1d6k3q45ei" path="res://levels/background_terrain.tscn" id="1_wpki0"]
-[ext_resource type="Texture2D" uid="uid://cfbxfaxldx2yt" path="res://icon.svg" id="2_67foa"]
 [ext_resource type="Script" uid="uid://ve1w35qugl3h" path="res://levels/camera_2d.gd" id="4_js2ni"]
+[ext_resource type="Script" uid="uid://ckwd6dakpi5tj" path="res://player/BusMaterial.gd" id="4_qjkv1"]
 [ext_resource type="PackedScene" uid="uid://bldrnwcvjqqyo" path="res://levels/isometricRoad.tscn" id="5_5qyid"]
+[ext_resource type="Script" uid="uid://r6vwn61n00ht" path="res://player/PassengerSection.gd" id="5_icvb7"]
 [ext_resource type="PackedScene" uid="uid://coa1meb65p5hb" path="res://player/truck.tscn" id="5_js2ni"]
+[ext_resource type="Script" uid="uid://rpmqkoap6o3w" path="res://levels/RoadPointData.gd" id="6_5qyid"]
+[ext_resource type="Script" uid="uid://ba41fov5rrauq" path="res://player/TireMaterial.gd" id="6_hij54"]
+[ext_resource type="Script" uid="uid://dw32mardp3sh3" path="res://player/EnginePower.gd" id="7_vip6u"]
+[ext_resource type="Script" uid="uid://btg20s4ud1ukv" path="res://player/PowerSource.gd" id="8_6yjkx"]
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n8ykr"]
+[sub_resource type="Resource" id="Resource_3vlvf"]
+script = ExtResource("4_qjkv1")
+material_type = 4
+base_weight_multiplier = 0.1
+durability = 100.0
+corrosion_resistance = 50.0
+metadata/_custom_type_script = "uid://ckwd6dakpi5tj"
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5qyid"]
-texture = ExtResource("2_67foa")
-texture_region_size = Vector2i(128, 128)
-0:0/0 = 0
-1:0/0 = 0
-0:1/0 = 0
-1:1/0 = 0
-0:2/0 = 0
-1:2/0 = 0
-0:3/0 = 0
-1:3/0 = 0
+[sub_resource type="Resource" id="Resource_4dbnt"]
+script = ExtResource("5_icvb7")
+section_count = 1
+seats_per_section = 30
+standing_room_per_section = 10
+luxury_level = 0.5
+weight_per_section = 2000.0
+metadata/_custom_type_script = "uid://r6vwn61n00ht"
 
-[sub_resource type="TileSet" id="TileSet_l1jis"]
-tile_size = Vector2i(128, 128)
-physics_layer_0/collision_layer = 1
-physics_layer_0/physics_material = SubResource("PhysicsMaterial_n8ykr")
-sources/2 = SubResource("TileSetAtlasSource_5qyid")
+[sub_resource type="Resource" id="Resource_jnk42"]
+script = ExtResource("6_hij54")
+tire_type = 0
+wear_level = 100.0
+pressure = 100.0
+temperature = 20.0
+metadata/_custom_type_script = "uid://ba41fov5rrauq"
+
+[sub_resource type="Resource" id="Resource_h6v6v"]
+script = ExtResource("7_vip6u")
+base_power = 200.0
+torque = 500.0
+efficiency = 0.85
+rpm_min = 800.0
+rpm_max = 4000.0
+rpm_optimal = 2500.0
+metadata/_custom_type_script = "uid://dw32mardp3sh3"
+
+[sub_resource type="Resource" id="Resource_csyog"]
+script = ExtResource("8_6yjkx")
+source_type = 0
+fuel_capacity = 100.0
+current_fuel = 100.0
+refuel_rate = 50.0
+psychic_resonance = 1.0
+chaos_stability = 0.5
+alien_core_health = 100.0
+metadata/_custom_type_script = "uid://btg20s4ud1ukv"
+
+[sub_resource type="PackedScene" id="PackedScene_qjkv1"]
+
+[sub_resource type="Resource" id="Resource_5qyid"]
+script = ExtResource("6_5qyid")
+gravity = 50
+health = 100.0
+pollution = 0.0
+sewer_percent = 100.0
+metadata/_custom_type_script = "uid://rpmqkoap6o3w"
+
+[sub_resource type="Resource" id="Resource_2yfp6"]
+script = ExtResource("6_5qyid")
+gravity = 30
+health = 100.0
+pollution = 0.0
+sewer_percent = 100.0
+
+[sub_resource type="Resource" id="Resource_wj04a"]
+script = ExtResource("6_5qyid")
+gravity = 90
+health = 100.0
+pollution = 0.0
+sewer_percent = 100.0
+
+[sub_resource type="Resource" id="Resource_qjkv1"]
+script = ExtResource("6_5qyid")
+gravity = 70
+health = 100.0
+pollution = 0.0
+sewer_percent = 100.0
+
+[sub_resource type="Resource" id="Resource_icvb7"]
+script = ExtResource("6_5qyid")
+gravity = 10
+health = 100.0
+pollution = 0.0
+sewer_percent = 100.0
+
+[sub_resource type="Resource" id="Resource_hij54"]
+script = ExtResource("6_5qyid")
+gravity = 70
+health = 100.0
+pollution = 0.0
+sewer_percent = 100.0
 
 [node name="city" type="Node2D"]
 y_sort_enabled = true
 
 [node name="background_terrain" parent="." instance=ExtResource("1_wpki0")]
 visible = false
-
-[node name="terrain" type="TileMapLayer" parent="."]
-visible = false
-z_index = 1
-y_sort_enabled = true
-use_parent_material = true
-tile_set = SubResource("TileSet_l1jis")
-x_draw_order_reversed = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(-547, 763)
@@ -51,19 +119,43 @@ zoom_level = Vector2(1.5, 1.5)
 [node name="truck" parent="." instance=ExtResource("5_js2ni")]
 z_index = 3
 position = Vector2(-1201, 963)
+bus_material = SubResource("Resource_3vlvf")
+passenger_section = SubResource("Resource_4dbnt")
+tires = SubResource("Resource_jnk42")
+engine = SubResource("Resource_h6v6v")
+power_source = SubResource("Resource_csyog")
+debug_vectors_scene = SubResource("PackedScene_qjkv1")
 start_direction = 6
-vector_scale = 3.0
 
-[node name="Road" parent="." instance=ExtResource("5_5qyid")]
+[node name="Road" parent="." groups=["roads"] instance=ExtResource("5_5qyid")]
 position = Vector2(5, -65)
-points = PackedVector2Array(-505, 1102, -1155, 1424, -2003.52, 1001.76, -1363, 674, -936, 891, -1291, 1070)
+points = PackedVector2Array(-486.567, 1116.25, -1144.87, 1431.08, -2003.52, 1001.76, -1345.22, 686.921, -944.514, 887.273, -1316.6, 1059)
 width = 128.0
 default_color = Color(0.0557858, 0.163021, 0.216079, 1)
 road_width = 128.0
 road_color = Color(0.0557858, 0.163021, 0.216079, 1)
 sidewalk_width = 32.0
 sidewalk_color = Color(1, 0.357369, 0.0475251, 1)
+point_data = Array[ExtResource("6_5qyid")]([SubResource("Resource_5qyid"), SubResource("Resource_2yfp6"), SubResource("Resource_wj04a"), SubResource("Resource_qjkv1"), SubResource("Resource_icvb7"), SubResource("Resource_hij54")])
 grid_size = 64.0
 grid_color = Color(0.915812, 0, 0.419096, 1)
-align_ends_to_grid = null
-show_end_caps = null
+
+[node name="SidewalkLeft2" type="Line2D" parent="Road"]
+z_index = -1
+points = PackedVector2Array(-521.084, 1044.07, -1144.16, 1351.09, -1923.52, 1002.46, -1345.92, 766.918, -1024.5, 886.023, -1350.12, 986.366)
+width = 32.0
+default_color = Color(1, 0.357369, 0.0475251, 1)
+
+[node name="SidewalkRight2" type="Line2D" parent="Road"]
+z_index = -1
+points = PackedVector2Array(-452.051, 1188.42, -1145.57, 1511.08, -2083.51, 1001.06, -1344.52, 606.924, -864.524, 888.522, -1283.07, 1131.64)
+width = 32.0
+default_color = Color(1, 0.357369, 0.0475251, 1)
+
+[node name="EndCapStart2" type="Polygon2D" parent="Road"]
+color = Color(0.0557858, 0.163021, 0.216079, 1)
+polygon = PackedVector2Array(-514.181, 1058.51, -458.954, 1173.98, -449.467, 1170.82, -504.694, 1055.35)
+
+[node name="EndCapEnd2" type="Polygon2D" parent="Road"]
+color = Color(0.0557858, 0.163021, 0.216079, 1)
+polygon = PackedVector2Array(-1343.42, 1000.89, -1289.78, 1117.11, -1299.26, 1120.27, -1352.9, 1004.06)

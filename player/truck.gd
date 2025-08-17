@@ -1,74 +1,287 @@
 extends CharacterBody2D
+class_name Bus
 
-# Movement variables
-@export var max_speed: float = 300.0
-@export var acceleration: float = 500.0
-@export var friction: float = 400.0
-@export var turn_speed: float = 2.0  # Radians per second
-@export var brake_strength: float = 800.0  # Stronger than friction
+# Component Resources
+@export_group("Bus Components")
+@export var bus_material: BusMaterial
+@export var passenger_section: PassengerSection
+@export var tires: TireMaterial
+@export var engine: EnginePower
+@export var power_source: PowerSource
+
+# Movement settings
+@export_group("Movement Settings")
+@export var base_acceleration: float = 500.0
+@export var base_max_speed: float = 300.0
+@export var base_friction: float = 400.0
+@export var turn_speed: float = 2.0
+@export var brake_strength: float = 800.0
+
+# Isometric settings
+@export_group("Isometric Settings")
+@export var tilemap_layer_path: NodePath
+@export var override_angle: float = -1.0
+@export var override_tile_size: Vector2 = Vector2.ZERO
+
+# Road interaction
+@export_group("Road Interaction")
+@export var check_road_properties: bool = true
+@export var gravity_effect_multiplier: float = 1.0
+
+# Debug settings
+@export_group("Debug")
+@export var enable_debug_vectors: bool = true
+@export var debug_vectors_scene: PackedScene  # Optional: drag BusDebugVectors scene here
 
 # Initial direction
 enum StartDirection { EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, NORTH, NORTHEAST }
 @export var start_direction: StartDirection = StartDirection.EAST
 
-# Isometric settings
-@export var tilemap_layer_path: NodePath  # Path to your TileMapLayer
-@export var override_angle: float = -1.0  # Set to override auto-detection
-@export var override_tile_size: Vector2 = Vector2.ZERO  # Set to override auto-detection
-
 # Auto-detected values
-var isometric_angle: float = 26.565  # Will be set from tilemap
-var tile_size: Vector2 = Vector2(64, 32)  # Will be set from tilemap
+var isometric_angle: float = 26.565
+var tile_size: Vector2 = Vector2(64, 32)
 var tilemap_layer: TileMapLayer
-
-# Debug visualization
-@export var show_debug_vectors: bool = true
-@export var vector_scale: float = 1.0
-@export var velocity_color: Color = Color.GREEN
-@export var direction_color: Color = Color.BLUE
-@export var show_tile_position: bool = true
 
 # Current movement state
 var current_speed: float = 0.0
-var visual_rotation: float = 0.0  # The rotation we show
-var movement_angle: float = 0.0   # The actual movement direction - will be set in _ready()
+var visual_rotation: float = 0.0
+var movement_angle: float = 0.0
+var throttle: float = 0.0
+
+# Current road data
+var current_road = null
+var current_gravity: int = 50
+
+# Calculated properties
+var total_weight: float = 1000.0
+var effective_acceleration: float = 500.0
+var effective_max_speed: float = 300.0
+var effective_turn_speed: float = 2.0
+
+# Debug visualizer
+var debug_vectors: BusDebugVectors = null
 
 func _ready():
-	# Get tilemap information
+	# Initialize components if not set
+	if not bus_material:
+		bus_material = BusMaterial.new()
+	if not passenger_section:
+		passenger_section = PassengerSection.new()
+	if not tires:
+		tires = TireMaterial.new()
+	if not engine:
+		engine = EnginePower.new()
+	if not power_source:
+		power_source = PowerSource.new()
+	
+	# Setup debug vectors
+	if enable_debug_vectors:
+		setup_debug_vectors()
+	
+	# Setup tilemap
 	setup_from_tilemap()
 	
-	# Initialize rotation based on selected start direction
+	# Initialize direction
 	set_initial_direction()
+	
+	# Calculate initial properties
+	update_bus_properties()
+	
 	set_physics_process(true)
 
-func set_initial_direction():
-	# In isometric view, the axes are rotated by the isometric angle
-	# East in isometric = screen right rotated by isometric angle
-	var direction_angles = {
-		StartDirection.EAST: 0 + isometric_angle,          # Right in iso grid
-		StartDirection.SOUTHEAST: 45 + isometric_angle,    # Down-right in iso
-		StartDirection.SOUTH: 90 + isometric_angle,        # Down in iso grid
-		StartDirection.SOUTHWEST: 135 + isometric_angle,   # Down-left in iso
-		StartDirection.WEST: 180 + isometric_angle,        # Left in iso grid
-		StartDirection.NORTHWEST: 225 + isometric_angle,   # Up-left in iso
-		StartDirection.NORTH: 270 + isometric_angle,       # Up in iso grid
-		StartDirection.NORTHEAST: 315 + isometric_angle    # Up-right in iso
-	}
+func setup_debug_vectors():
+	# Check if debug vectors already exist
+	if has_node("DebugVectors"):
+		debug_vectors = get_node("DebugVectors")
+		return
 	
-	var initial_angle_deg = direction_angles[start_direction]
-	visual_rotation = deg_to_rad(initial_angle_deg)
+	# Create from scene if provided
+	if debug_vectors_scene:
+		var instance = debug_vectors_scene.instantiate()
+		if instance is BusDebugVectors:
+			debug_vectors = instance
+			add_child(debug_vectors)
+			return
+	
+	# Create default debug vectors
+	debug_vectors = BusDebugVectors.create_default()
+	add_child(debug_vectors)
+
+func _physics_process(delta):
+	# Update components
+	update_components(delta)
+	
+	# Update road properties
+	if check_road_properties:
+		update_current_road()
+	
+	# Handle input and movement
+	handle_input(delta)
+	apply_movement(delta)
+	move_and_slide()
+	
+	# Update visual rotation
 	rotation = visual_rotation
-	movement_angle = visual_rotation
+
+func update_components(delta):
+	# Update tire wear and temperature
+	tires.update_wear(delta, current_speed, effective_acceleration)
+	tires.update_temperature(delta, current_speed)
 	
-	print("Bus initialized facing: ", StartDirection.keys()[start_direction])
-	print("Initial angle: ", initial_angle_deg, "°")
+	# Update engine
+	engine.update_rpm(current_speed)
+	engine.update_temperature(delta, throttle)
+	
+	# Update passenger satisfaction
+	passenger_section.update_satisfaction(delta, current_speed, effective_acceleration)
+	
+	# Update special power source properties
+	power_source.update_special_properties(delta)
+	
+	# Consume fuel
+	var fuel_consumption = engine.calculate_fuel_consumption(power_source.get_source_name(), throttle)
+	if not power_source.consume_fuel(fuel_consumption, delta):
+		# Out of fuel!
+		throttle = 0.0
+
+func update_bus_properties():
+	# Calculate total weight
+	var material_weight_mod = bus_material.get_weight_modifier(power_source.get_source_name())
+	var base_bus_weight = 5000.0 * material_weight_mod
+	var passenger_weight = passenger_section.get_total_weight()
+	var component_weights = power_source.get_properties()["weight"] + 200.0  # Tires and misc
+	
+	total_weight = base_bus_weight + passenger_weight + component_weights
+	
+	# Calculate effective acceleration
+	var power = engine.get_current_power(power_source.get_source_name(), 1.0)
+	var tire_grip = tires.get_acceleration_modifier()
+	effective_acceleration = (power / total_weight) * 1000.0 * tire_grip * base_acceleration
+	
+	# Calculate effective max speed
+	var speed_rating = tires.get_tire_properties()["speed_rating"]
+	effective_max_speed = base_max_speed * speed_rating * (power / 200.0)
+	
+	# Calculate turn speed based on tire stability
+	var stability = tires.get_steering_stability(current_speed)
+	effective_turn_speed = turn_speed * stability
+
+func handle_input(delta):
+	# Get input
+	var input_vertical = Input.get_axis("ui_down", "ui_up")
+	var input_horizontal = Input.get_axis("ui_left", "ui_right")
+	var input_brake = Input.is_action_pressed("ui_select")
+	
+	# Update throttle
+	if input_vertical > 0:
+		throttle = input_vertical
+	else:
+		throttle = 0.0
+	
+	# Update bus properties based on current state
+	update_bus_properties()
+	
+	# If starting from stop, align movement with visual direction
+	if abs(current_speed) < 1.0 and input_vertical != 0:
+		movement_angle = visual_rotation
+	
+	# Apply acceleration/deceleration
+	if input_vertical != 0:
+		# Get current engine power
+		var current_power = engine.get_current_power(power_source.get_source_name(), abs(input_vertical))
+		var acceleration_mod = tires.get_acceleration_modifier()
+		
+		# Apply gravity effect if on road
+		var gravity_factor = 1.0
+		if check_road_properties and current_road:
+			gravity_factor = 1.0 + ((50.0 - current_gravity) / 50.0) * gravity_effect_multiplier
+			if input_vertical < 0:
+				gravity_factor = 2.0 - gravity_factor
+		
+		# Calculate final acceleration
+		var final_acceleration = (current_power / total_weight) * 1000.0 * acceleration_mod * gravity_factor
+		
+		# Apply acceleration
+		current_speed += input_vertical * final_acceleration * delta
+		
+		# Reverse is slower
+		if input_vertical < 0:
+			current_speed = clamp(current_speed, -effective_max_speed * 0.5, effective_max_speed)
+		else:
+			current_speed = clamp(current_speed, -effective_max_speed * 0.5, effective_max_speed)
+	
+	# Apply braking
+	elif input_brake:
+		var brake_mod = tires.get_braking_modifier()
+		var brake_force = brake_strength * brake_mod * delta
+		
+		if abs(current_speed) > brake_force:
+			current_speed -= sign(current_speed) * brake_force
+		else:
+			current_speed = 0.0
+	
+	# Apply friction
+	else:
+		var friction_force = base_friction * delta
+		
+		# Gravity affects friction on slopes
+		if check_road_properties and current_gravity != 50:
+			if current_gravity < 50 and current_speed > 0:
+				friction_force *= 0.5 + (current_gravity / 100.0)
+			elif current_gravity > 50 and current_speed > 0:
+				friction_force *= 1.0 + ((current_gravity - 50) / 50.0)
+		
+		if abs(current_speed) > friction_force:
+			current_speed -= sign(current_speed) * friction_force
+		else:
+			current_speed = 0.0
+	
+	# Steering (only when moving)
+	if abs(current_speed) > 10 and input_horizontal != 0:
+		# Get steering stability from tires
+		var steering_mod = tires.get_steering_stability(abs(current_speed))
+		
+		# Turn rate depends on speed
+		var speed_factor = 1.0 - (abs(current_speed) / effective_max_speed) * 0.5
+		var turn_amount = input_horizontal * effective_turn_speed * steering_mod * speed_factor * delta * sign(current_speed)
+		
+		# Apply special power source effects
+		match power_source.source_type:
+			PowerSource.SourceType.PSYCHIC:
+				# More responsive to driver's intent
+				turn_amount *= 1.0 + power_source.psychic_resonance * 0.5
+			PowerSource.SourceType.CHAOS:
+				# Random steering wobble
+				turn_amount += randf_range(-0.1, 0.1) * delta
+		
+		visual_rotation += turn_amount
+		movement_angle += turn_amount
+
+func apply_movement(delta):
+	# Calculate movement direction
+	var direction = Vector2.RIGHT.rotated(movement_angle)
+	
+	# Apply velocity
+	velocity = direction * current_speed
+	
+	# Apply special power source movement effects
+	match power_source.source_type:
+		PowerSource.SourceType.ALIEN:
+			# Slight hover effect - reduced friction
+			velocity *= 1.0 + (power_source.alien_core_health / 100.0) * 0.2
+		PowerSource.SourceType.CHAOS:
+			# Random velocity fluctuations
+			velocity *= randf_range(0.9, 1.1)
+	
+	# Smooth the movement angle toward visual rotation
+	if abs(current_speed) > 10:
+		movement_angle = lerp_angle(movement_angle, visual_rotation, 0.1)
 
 func setup_from_tilemap():
-	# Get the TileMapLayer node
+	# Get tilemap information
 	if tilemap_layer_path:
 		tilemap_layer = get_node(tilemap_layer_path)
 	else:
-		# Try to find it automatically in the scene
 		tilemap_layer = find_tilemap_in_scene()
 	
 	if not tilemap_layer:
@@ -93,192 +306,132 @@ func setup_from_tilemap():
 	
 	# Determine angle based on tile shape and layout
 	if tile_shape == TileSet.TILE_SHAPE_ISOMETRIC:
-		# Calculate angle from tile dimensions
 		if override_angle >= 0:
 			isometric_angle = override_angle
 		else:
-			# Standard isometric angle calculation
-			# For 2:1 ratio isometric tiles, the angle is atan(0.5) ≈ 26.565°
 			var ratio = float(tile_size.y) / float(tile_size.x)
 			isometric_angle = rad_to_deg(atan(ratio))
 		
 		print("Isometric tilemap detected!")
 		print("  Tile size: ", tile_size)
 		print("  Isometric angle: ", isometric_angle, "°")
-		
-		# Show the 8 cardinal directions for this isometric setup
-		print("Cardinal directions for movement:")
-		print("  East (Right): ", 0 + isometric_angle, "°")
-		print("  Southeast: ", 45 + isometric_angle, "°")
-		print("  South (Down): ", 90 + isometric_angle, "°")
-		print("  Southwest: ", 135 + isometric_angle, "°")
-		print("  West (Left): ", 180 + isometric_angle, "°")
-		print("  Northwest: ", 225 + isometric_angle, "°")
-		print("  North (Up): ", 270 + isometric_angle, "°")
-		print("  Northeast: ", 315 + isometric_angle, "°")
-	else:
-		push_warning("TileMap is not isometric! Shape: ", tile_shape)
 
 func find_tilemap_in_scene() -> TileMapLayer:
-	# Search for TileMapLayer in parent nodes
 	var current = get_parent()
 	while current:
 		for child in current.get_children():
 			if child is TileMapLayer:
 				return child
-			# Also check TileMap node (which contains TileMapLayers)
 			if child is TileMap:
-				for layer_idx in child.get_layers_count():
-					# In Godot 4.4, we work with the TileMap directly
-					return child
+				return child
 		current = current.get_parent()
 	return null
 
-func _physics_process(delta):
-	handle_input(delta)
-	apply_movement(delta)
-	move_and_slide()
+func set_initial_direction():
+	var direction_angles = {
+		StartDirection.EAST: 0 + isometric_angle,
+		StartDirection.SOUTHEAST: 45 + isometric_angle,
+		StartDirection.SOUTH: 90 + isometric_angle,
+		StartDirection.SOUTHWEST: 135 + isometric_angle,
+		StartDirection.WEST: 180 + isometric_angle,
+		StartDirection.NORTHWEST: 225 + isometric_angle,
+		StartDirection.NORTH: 270 + isometric_angle,
+		StartDirection.NORTHEAST: 315 + isometric_angle
+	}
 	
-	# Update visual rotation
+	var initial_angle_deg = direction_angles[start_direction]
+	visual_rotation = deg_to_rad(initial_angle_deg)
 	rotation = visual_rotation
-	
-	# Force redraw for debug vectors
-	if show_debug_vectors:
-		queue_redraw()
+	movement_angle = visual_rotation
 
-func handle_input(delta):
-	# Forward/Backward movement
-	var input_vertical = Input.get_axis("ui_down", "ui_up")  # up = forward, down = reverse
+func update_current_road():
+	var roads = get_tree().get_nodes_in_group("roads")
 	
-	# If starting from stop, align movement with visual direction
-	if abs(current_speed) < 1.0 and input_vertical != 0:
-		movement_angle = visual_rotation
+	current_road = null
+	var min_distance = INF
 	
-	if input_vertical != 0:
-		# Accelerate or reverse
-		current_speed += input_vertical * acceleration * delta
-		current_speed = clamp(current_speed, -max_speed * 0.5, max_speed)  # Reverse is slower
-	else:
-		# Apply friction when no input
-		var friction_force = friction * delta
-		if abs(current_speed) > friction_force:
-			current_speed -= sign(current_speed) * friction_force
-		else:
-			current_speed = 0.0
-	
-	# Brake (Space or another key)
-	if Input.is_action_pressed("ui_select"):  # You can change this to a custom action
-		var brake_force = brake_strength * delta
-		if abs(current_speed) > brake_force:
-			current_speed -= sign(current_speed) * brake_force
-		else:
-			current_speed = 0.0
-	
-	# Steering (only when moving)
-	if abs(current_speed) > 10:
-		var input_horizontal = Input.get_axis("ui_left", "ui_right")
-		if input_horizontal != 0:
-			# Turn rate depends on speed (slower when going fast)
-			var turn_modifier = 1.0 - (abs(current_speed) / max_speed) * 0.5
-			var turn_amount = input_horizontal * turn_speed * turn_modifier * delta * sign(current_speed)
+	for road in roads:
+		if road.has_method("get_gravity_at_position"):
+			var local_pos = road.to_local(global_position)
 			
-			# Update both visual and movement angles
-			visual_rotation += turn_amount
-			movement_angle += turn_amount
+			for i in range(road.points.size() - 1):
+				var closest = get_closest_point_on_line(local_pos, road.points[i], road.points[i + 1])
+				var dist = local_pos.distance_to(closest)
+				
+				if dist < road.road_width / 2 + 10 and dist < min_distance:
+					min_distance = dist
+					current_road = road
+	
+	if current_road and current_road.has_method("get_gravity_at_position"):
+		current_gravity = current_road.get_gravity_at_position(global_position)
+	else:
+		current_gravity = 50
 
-func apply_movement(delta):
-	# Calculate movement direction
-	var direction = Vector2.RIGHT.rotated(movement_angle)
+func get_closest_point_on_line(point: Vector2, line_start: Vector2, line_end: Vector2) -> Vector2:
+	var line_vec = line_end - line_start
+	var point_vec = point - line_start
+	var line_len = line_vec.length()
 	
-	# Apply velocity
-	velocity = direction * current_speed
+	if line_len == 0:
+		return line_start
 	
-	# Smooth the movement angle toward visual rotation (helps with drifting feel)
-	if abs(current_speed) > 10:  # Only apply smoothing when moving
-		movement_angle = lerp_angle(movement_angle, visual_rotation, 0.1)
+	var line_unitvec = line_vec / line_len
+	var proj_length = clamp(point_vec.dot(line_unitvec), 0.0, line_len)
+	
+	return line_start + line_unitvec * proj_length
 
 func world_to_isometric(world_pos: Vector2) -> Vector2:
-	# Convert world coordinates to isometric coordinates
 	var iso_x = world_pos.x / tile_size.x + world_pos.y / tile_size.y
 	var iso_y = world_pos.y / tile_size.y - world_pos.x / tile_size.x
 	return Vector2(iso_x, iso_y)
 
-func isometric_to_world(iso_pos: Vector2) -> Vector2:
-	# Convert isometric coordinates to world coordinates
-	var world_x = (iso_pos.x - iso_pos.y) * tile_size.x / 2
-	var world_y = (iso_pos.x + iso_pos.y) * tile_size.y / 2
-	return Vector2(world_x, world_y)
-
-# Get current tile position
 func get_tile_position() -> Vector2i:
 	var iso_pos = world_to_isometric(global_position)
 	return Vector2i(round(iso_pos.x), round(iso_pos.y))
 
-# Optional: Snap to nearest road angle (call this when you want to align with roads)
-func snap_to_road_angle():
-	# 8 possible directions in isometric view (45-degree increments)
-	var angles = []
-	for i in 8:
-		angles.append(deg_to_rad(i * 45 - isometric_angle))
-	
-	# Find closest angle
-	var closest_angle = angles[0]
-	var min_diff = abs(angle_difference(visual_rotation, angles[0]))
-	
-	for angle in angles:
-		var diff = abs(angle_difference(visual_rotation, angle))
-		if diff < min_diff:
-			min_diff = diff
-			closest_angle = angle
-	
-	visual_rotation = closest_angle
-	movement_angle = closest_angle
+# Public methods for game systems
+func add_passengers_at_stop(count: int) -> int:
+	return passenger_section.add_passengers(count)
 
-# Debug drawing
-func _draw():
-	if not show_debug_vectors:
+func remove_passengers_at_stop(count: int) -> int:
+	return passenger_section.remove_passengers(count)
+
+func refuel_bus(delta: float):
+	power_source.refuel(delta)
+
+# This should replace everything after the repair_tires() function in your bus controller
+
+func repair_tires():
+	tires.wear_level = 100.0
+	tires.temperature = 20.0
+
+# Debug control methods
+func set_debug_visible(visible: bool):
+	if debug_vectors:
+		debug_vectors.visible = visible
+
+func set_debug_preset(preset: String):
+	if not debug_vectors:
 		return
 	
-	# Draw velocity vector (green) - where we're actually moving
-	if velocity.length() > 0:
-		# Velocity is in world space, need to convert to local space
-		var local_velocity = velocity.rotated(-rotation) * vector_scale
-		draw_line(Vector2.ZERO, local_velocity, velocity_color, 3.0)
-		draw_circle(local_velocity, 5, velocity_color)
-	
-	# Draw direction vector (blue) - where we're facing
-	# This is already correct as it's based on visual rotation
-	var facing_direction = Vector2.RIGHT * 100 * vector_scale
-	draw_line(Vector2.ZERO, facing_direction, direction_color, 2.0)
-	draw_circle(facing_direction, 4, direction_color)
-	
-	# Draw movement direction (yellow) - actual movement angle
-	if abs(movement_angle - visual_rotation) > 0.01:
-		var move_dir_world = Vector2.RIGHT.rotated(movement_angle)
-		var move_dir_local = move_dir_world.rotated(-rotation) * 80 * vector_scale
-		draw_line(Vector2.ZERO, move_dir_local, Color.YELLOW, 1.0)
-		draw_circle(move_dir_local, 3, Color.YELLOW)
-	
-	# Draw current info
-	var font = ThemeDB.fallback_font
-	var y_offset = 0
-	
-	draw_string(font, Vector2(20, y_offset), "Speed: %d" % int(velocity.length()), 
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+	match preset:
+		"minimal":
+			debug_vectors.show_velocity_vector = true
+			debug_vectors.show_direction_vector = false
+			debug_vectors.show_movement_vector = false
+			debug_vectors.show_component_stats = false
+		"full":
+			debug_vectors.show_velocity_vector = true
+			debug_vectors.show_direction_vector = true
+			debug_vectors.show_movement_vector = true
+			debug_vectors.show_component_stats = true
+		"vectors_only":
+			debug_vectors.show_velocity_vector = true
+			debug_vectors.show_direction_vector = true
+			debug_vectors.show_movement_vector = true
+			debug_vectors.show_speed = false
+			debug_vectors.show_tile_position = false
+			debug_vectors.show_gravity = false
+			debug_vectors.show_component_stats = false
 
-	draw_string(font, Vector2(20, y_offset + 20), "Angle: %d" % int(rad_to_deg(visual_rotation)), 
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
-	
-	if show_tile_position:
-		y_offset -= 20
-		var tile_pos = get_tile_position()
-		draw_string(font, Vector2(20, y_offset), "Tile: %s" % str(tile_pos), 
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
-
-func angle_difference(from: float, to: float) -> float:
-	var diff = to - from
-	while diff > PI:
-		diff -= TAU
-	while diff < -PI:
-		diff += TAU
-	return diff
+# End of file - no _draw() function needed anymore!

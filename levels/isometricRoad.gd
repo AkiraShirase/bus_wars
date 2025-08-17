@@ -30,6 +30,18 @@ class_name IsometricRoad
 		sidewalk_color = value
 		update_sidewalks()
 
+# Point properties system
+@export_group("Point Properties")
+@export var point_data: Array[RoadPointData] = []
+@export var visualize_properties: bool = true:
+	set(value):
+		visualize_properties = value
+		queue_redraw()
+@export var property_to_visualize: String = "gravity":
+	set(value):
+		property_to_visualize = value
+		queue_redraw()
+
 # Isometric settings
 @export_group("Isometric")
 @export var snap_to_isometric: bool = true:
@@ -119,8 +131,20 @@ func _ready():
 	if "cap_mode" in self:
 		set("cap_mode", Line2D.LINE_CAP_ROUND)
 	
+	# Initialize point data
+	_ensure_point_data_matches_points()
+	
 	# Create child elements for both editor and game
 	setup_child_elements()
+
+func _ensure_point_data_matches_points():
+	# Make sure we have data for each point
+	while point_data.size() < points.size():
+		point_data.append(RoadPointData.new())
+	
+	# Remove excess data
+	while point_data.size() > points.size():
+		point_data.pop_back()
 
 func setup_child_elements():
 	# Create sidewalks if they don't exist
@@ -162,6 +186,10 @@ func setup_child_elements():
 	update_road_geometry()
 
 func _draw():
+	# Draw property visualization for both editor and game
+	if visualize_properties and points.size() > 1:
+		draw_property_gradient()
+	
 	if not Engine.is_editor_hint():
 		return
 	
@@ -173,6 +201,75 @@ func _draw():
 	if show_direction_handles and points.size() > 0:
 		for i in range(points.size()):
 			draw_point_handle(i)
+
+func draw_property_gradient():
+	# Draw gradient along road to visualize property values
+	if points.size() < 2:
+		return
+	
+	for i in range(points.size() - 1):
+		var start = points[i]
+		var end = points[i + 1]
+		var segments = 10  # Subdivisions for smooth gradient
+		
+		for j in range(segments):
+			var t1 = float(j) / segments
+			var t2 = float(j + 1) / segments
+			
+			var p1 = start.lerp(end, t1)
+			var p2 = start.lerp(end, t2)
+			
+			# Get interpolated property value
+			var value1 = get_interpolated_property(i, i + 1, t1)
+			var value2 = get_interpolated_property(i, i + 1, t2)
+			
+			# Convert to color
+			var color1 = get_property_color(value1)
+			var color2 = get_property_color(value2)
+			
+			# Draw segment
+			draw_line(p1, p2, color1.lerp(color2, 0.5), road_width * 0.8)
+
+func get_property_color(value: float) -> Color:
+	# Map property value to color gradient
+	match property_to_visualize:
+		"gravity":
+			# Green (easy) to Red (hard)
+			var t = (value - 1.0) / 99.0
+			return Color.GREEN.lerp(Color.RED, t)
+		"health":
+			# Red (bad) to Green (good)
+			var t = value / 100.0
+			return Color.RED.lerp(Color.GREEN, t)
+		"pollution":
+			# Green (clean) to Purple (polluted)
+			var t = value / 100.0
+			return Color.GREEN.lerp(Color.PURPLE, t)
+		"sewer_percent":
+			# Brown (bad) to Blue (good)
+			var t = value / 100.0
+			return Color.BROWN.lerp(Color.BLUE, t)
+		_:
+			return Color.WHITE
+
+func get_interpolated_property(point_idx1: int, point_idx2: int, t: float) -> float:
+	if point_idx1 >= point_data.size() or point_idx2 >= point_data.size():
+		return 50.0
+	
+	var data1 = point_data[point_idx1]
+	var data2 = point_data[point_idx2]
+	
+	match property_to_visualize:
+		"gravity":
+			return lerp(float(data1.gravity), float(data2.gravity), t)
+		"health":
+			return lerp(data1.health, data2.health, t)
+		"pollution":
+			return lerp(data1.pollution, data2.pollution, t)
+		"sewer_percent":
+			return lerp(data1.sewer_percent, data2.sewer_percent, t)
+		_:
+			return 50.0
 
 func draw_isometric_grid():
 	var viewport_size = get_viewport_rect().size
@@ -491,3 +588,53 @@ func add_isometric_point(world_pos: Vector2):
 	add_point(local_pos)
 	update_sidewalks()
 	update_markings()
+
+# Get road properties at a specific world position
+func get_properties_at_position(world_pos: Vector2) -> RoadPointData:
+	var local_pos = to_local(world_pos)
+	
+	# Find closest segment
+	var closest_segment = -1
+	var closest_distance = INF
+	var closest_t = 0.0
+	
+	for i in range(points.size() - 1):
+		var segment_start = points[i]
+		var segment_end = points[i + 1]
+		
+		# Get closest point on segment
+		var segment_vec = segment_end - segment_start
+		var pos_vec = local_pos - segment_start
+		var segment_length = segment_vec.length()
+		
+		if segment_length == 0:
+			continue
+		
+		var t = clamp(pos_vec.dot(segment_vec) / (segment_length * segment_length), 0.0, 1.0)
+		var closest_point = segment_start + segment_vec * t
+		var distance = local_pos.distance_to(closest_point)
+		
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_segment = i
+			closest_t = t
+	
+	# Return interpolated data
+	if closest_segment >= 0 and closest_segment + 1 < point_data.size():
+		return interpolate_point_data(point_data[closest_segment], point_data[closest_segment + 1], closest_t)
+	
+	# Fallback
+	return RoadPointData.new()
+
+func interpolate_point_data(data1: RoadPointData, data2: RoadPointData, t: float) -> RoadPointData:
+	var result = RoadPointData.new()
+	result.gravity = int(lerp(float(data1.gravity), float(data2.gravity), t))
+	result.health = lerp(data1.health, data2.health, t)
+	result.pollution = lerp(data1.pollution, data2.pollution, t)
+	result.sewer_percent = lerp(data1.sewer_percent, data2.sewer_percent, t)
+	return result
+
+# Get gravity value specifically (for bus physics)
+func get_gravity_at_position(world_pos: Vector2) -> int:
+	var data = get_properties_at_position(world_pos)
+	return data.gravity
