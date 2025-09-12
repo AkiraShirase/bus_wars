@@ -29,9 +29,9 @@ class_name Bus
 @export var gravity_effect_multiplier: float = 1.0
 
 # Debug settings
-@export_group("Debug")
-@export var enable_debug_vectors: bool = true
-@export var debug_vectors_scene: PackedScene  # Optional: drag BusDebugVectors scene here
+@export_group("Debug UI")
+@export var show_debug_info: bool = true
+@export var show_component_stats: bool = false
 
 # Initial direction
 enum StartDirection { EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, NORTH, NORTHEAST }
@@ -58,12 +58,9 @@ var effective_acceleration: float = 500.0
 var effective_max_speed: float = 300.0
 var effective_turn_speed: float = 2.0
 
-# Debug visualizer
-var debug_vectors: BusDebugVectors = null
-
 func _ready():
 	# Initialize components if not set
-	if not bus_material:
+	if not material:
 		bus_material = BusMaterial.new()
 	if not passenger_section:
 		passenger_section = PassengerSection.new()
@@ -73,10 +70,6 @@ func _ready():
 		engine = EnginePower.new()
 	if not power_source:
 		power_source = PowerSource.new()
-	
-	# Setup debug vectors
-	if enable_debug_vectors:
-		setup_debug_vectors()
 	
 	# Setup tilemap
 	setup_from_tilemap()
@@ -88,24 +81,6 @@ func _ready():
 	update_bus_properties()
 	
 	set_physics_process(true)
-
-func setup_debug_vectors():
-	# Check if debug vectors already exist
-	if has_node("DebugVectors"):
-		debug_vectors = get_node("DebugVectors")
-		return
-	
-	# Create from scene if provided
-	if debug_vectors_scene:
-		var instance = debug_vectors_scene.instantiate()
-		if instance is BusDebugVectors:
-			debug_vectors = instance
-			add_child(debug_vectors)
-			return
-	
-	# Create default debug vectors
-	debug_vectors = BusDebugVectors.create_default()
-	add_child(debug_vectors)
 
 func _physics_process(delta):
 	# Update components
@@ -122,6 +97,10 @@ func _physics_process(delta):
 	
 	# Update visual rotation
 	rotation = visual_rotation
+	
+	# Update debug display
+	if show_debug_info:
+		queue_redraw()
 
 func update_components(delta):
 	# Update tire wear and temperature
@@ -389,6 +368,53 @@ func get_tile_position() -> Vector2i:
 	var iso_pos = world_to_isometric(global_position)
 	return Vector2i(round(iso_pos.x), round(iso_pos.y))
 
+func _draw():
+	if not show_debug_info:
+		return
+	
+	var font = ThemeDB.fallback_font
+	var y_offset = -60
+	
+	# Basic info
+	draw_string(font, Vector2(20, y_offset), "Speed: %d km/h" % int(current_speed * 3.6), 
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+	
+	y_offset -= 20
+	draw_string(font, Vector2(20, y_offset), "Fuel: %d%%" % int((power_source.current_fuel / power_source.fuel_capacity) * 100), 
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.YELLOW)
+	
+	y_offset -= 20
+	draw_string(font, Vector2(20, y_offset), "Passengers: %d/%d" % [passenger_section.current_passengers, passenger_section.get_total_capacity()], 
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.CYAN)
+	
+	if check_road_properties and current_gravity != 50:
+		y_offset -= 20
+		var gravity_color = Color.GREEN if current_gravity < 50 else Color.RED
+		draw_string(font, Vector2(20, y_offset), "Gravity: %d" % current_gravity, 
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 16, gravity_color)
+	
+	# Component stats
+	if show_component_stats:
+		y_offset -= 30
+		draw_string(font, Vector2(20, y_offset), "=== Components ===", 
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.GRAY)
+		
+		y_offset -= 18
+		draw_string(font, Vector2(20, y_offset), "Power: %s" % power_source.get_source_name(), 
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.GREEN)
+		
+		y_offset -= 18
+		draw_string(font, Vector2(20, y_offset), "Tire Wear: %d%%" % int(tires.wear_level), 
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.ORANGE)
+		
+		y_offset -= 18
+		draw_string(font, Vector2(20, y_offset), "Engine Temp: %d°C" % int(engine.temperature), 
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.RED if engine.temperature > 100 else Color.WHITE)
+		
+		y_offset -= 18
+		draw_string(font, Vector2(20, y_offset), "Weight: %d kg" % int(total_weight), 
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.GRAY)
+
 # Public methods for game systems
 func add_passengers_at_stop(count: int) -> int:
 	return passenger_section.add_passengers(count)
@@ -399,39 +425,6 @@ func remove_passengers_at_stop(count: int) -> int:
 func refuel_bus(delta: float):
 	power_source.refuel(delta)
 
-# This should replace everything after the repair_tires() function in your bus controller
-
 func repair_tires():
 	tires.wear_level = 100.0
 	tires.temperature = 20.0
-
-# Debug control methods
-func set_debug_visible(visible: bool):
-	if debug_vectors:
-		debug_vectors.visible = visible
-
-func set_debug_preset(preset: String):
-	if not debug_vectors:
-		return
-	
-	match preset:
-		"minimal":
-			debug_vectors.show_velocity_vector = true
-			debug_vectors.show_direction_vector = false
-			debug_vectors.show_movement_vector = false
-			debug_vectors.show_component_stats = false
-		"full":
-			debug_vectors.show_velocity_vector = true
-			debug_vectors.show_direction_vector = true
-			debug_vectors.show_movement_vector = true
-			debug_vectors.show_component_stats = true
-		"vectors_only":
-			debug_vectors.show_velocity_vector = true
-			debug_vectors.show_direction_vector = true
-			debug_vectors.show_movement_vector = true
-			debug_vectors.show_speed = false
-			debug_vectors.show_tile_position = false
-			debug_vectors.show_gravity = false
-			debug_vectors.show_component_stats = false
-
-# End of file - no _draw() function needed anymore!

@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://dtunvn6ti05no"]
+[gd_scene load_steps=22 format=3 uid="uid://dtunvn6ti05no"]
 
 [ext_resource type="PackedScene" uid="uid://bsm1d6k3q45ei" path="res://levels/background_terrain.tscn" id="1_wpki0"]
 [ext_resource type="Script" uid="uid://ve1w35qugl3h" path="res://levels/camera_2d.gd" id="4_js2ni"]
@@ -56,8 +56,6 @@ psychic_resonance = 1.0
 chaos_stability = 0.5
 alien_core_health = 100.0
 metadata/_custom_type_script = "uid://btg20s4ud1ukv"
-
-[sub_resource type="PackedScene" id="PackedScene_qjkv1"]
 
 [sub_resource type="Resource" id="Resource_5qyid"]
 script = ExtResource("6_5qyid")
@@ -124,7 +122,6 @@ passenger_section = SubResource("Resource_4dbnt")
 tires = SubResource("Resource_jnk42")
 engine = SubResource("Resource_h6v6v")
 power_source = SubResource("Resource_csyog")
-debug_vectors_scene = SubResource("PackedScene_qjkv1")
 start_direction = 6
 
 [node name="Road" parent="." groups=["roads"] instance=ExtResource("5_5qyid")]
