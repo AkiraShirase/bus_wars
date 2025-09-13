@@ -1,5 +1,5 @@
 extends CharacterBody2D
-class_name Bus
+class_name Vehicle
 
 # Component Resources
 @export_group("Bus Components")
@@ -11,11 +11,8 @@ class_name Bus
 
 # Movement settings
 @export_group("Movement Settings")
-@export var base_acceleration: float = 500.0
 @export var base_max_speed: float = 300.0
 @export var base_friction: float = 400.0
-@export var turn_speed: float = 2.0
-@export var brake_strength: float = 800.0
 
 # Isometric settings
 @export_group("Isometric Settings")
@@ -46,7 +43,6 @@ var tilemap_layer: TileMapLayer
 var current_speed: float = 0.0
 var visual_rotation: float = 0.0
 var movement_angle: float = 0.0
-var throttle: float = 0.0
 
 # Current road data
 var current_road = null
@@ -54,9 +50,7 @@ var current_gravity: int = 50
 
 # Calculated properties
 var total_weight: float = 1000.0
-var effective_acceleration: float = 500.0
 var effective_max_speed: float = 300.0
-var effective_turn_speed: float = 2.0
 
 func _ready():
 	# Initialize components if not set
@@ -104,24 +98,23 @@ func _physics_process(delta):
 
 func update_components(delta):
 	# Update tire wear and temperature
-	tires.update_wear(delta, current_speed, effective_acceleration)
+	tires.update_wear(delta, current_speed, 0.0)
 	tires.update_temperature(delta, current_speed)
 	
 	# Update engine
 	engine.update_rpm(current_speed)
-	engine.update_temperature(delta, throttle)
+	engine.update_temperature(delta, 0.0)
 	
 	# Update passenger satisfaction
-	passenger_section.update_satisfaction(delta, current_speed, effective_acceleration)
+	passenger_section.update_satisfaction(delta, current_speed, 0.0)
 	
 	# Update special power source properties
 	power_source.update_special_properties(delta)
 	
 	# Consume fuel
-	var fuel_consumption = engine.calculate_fuel_consumption(power_source.get_source_name(), throttle)
+	var fuel_consumption = engine.calculate_fuel_consumption(power_source.get_source_name(), 0.0)
 	if not power_source.consume_fuel(fuel_consumption, delta):
 		# Out of fuel!
-		throttle = 0.0
 
 func update_bus_properties():
 	# Calculate total weight
@@ -135,106 +128,17 @@ func update_bus_properties():
 	# Calculate effective acceleration
 	var power = engine.get_current_power(power_source.get_source_name(), 1.0)
 	var tire_grip = tires.get_acceleration_modifier()
-	effective_acceleration = (power / total_weight) * 1000.0 * tire_grip * base_acceleration
 	
 	# Calculate effective max speed
 	var speed_rating = tires.get_tire_properties()["speed_rating"]
 	effective_max_speed = base_max_speed * speed_rating * (power / 200.0)
 	
 	# Calculate turn speed based on tire stability
-	var stability = tires.get_steering_stability(current_speed)
-	effective_turn_speed = turn_speed * stability
 
 func handle_input(delta):
-	# Get input
-	var input_vertical = Input.get_axis("ui_down", "ui_up")
-	var input_horizontal = Input.get_axis("ui_left", "ui_right")
-	var input_brake = Input.is_action_pressed("ui_select")
-	
-	# Update throttle
-	if input_vertical > 0:
-		throttle = input_vertical
-	else:
-		throttle = 0.0
-	
 	# Update bus properties based on current state
 	update_bus_properties()
 	
-	# If starting from stop, align movement with visual direction
-	if abs(current_speed) < 1.0 and input_vertical != 0:
-		movement_angle = visual_rotation
-	
-	# Apply acceleration/deceleration
-	if input_vertical != 0:
-		# Get current engine power
-		var current_power = engine.get_current_power(power_source.get_source_name(), abs(input_vertical))
-		var acceleration_mod = tires.get_acceleration_modifier()
-		
-		# Apply gravity effect if on road
-		var gravity_factor = 1.0
-		if check_road_properties and current_road:
-			gravity_factor = 1.0 + ((50.0 - current_gravity) / 50.0) * gravity_effect_multiplier
-			if input_vertical < 0:
-				gravity_factor = 2.0 - gravity_factor
-		
-		# Calculate final acceleration
-		var final_acceleration = (current_power / total_weight) * 1000.0 * acceleration_mod * gravity_factor
-		
-		# Apply acceleration
-		current_speed += input_vertical * final_acceleration * delta
-		
-		# Reverse is slower
-		if input_vertical < 0:
-			current_speed = clamp(current_speed, -effective_max_speed * 0.5, effective_max_speed)
-		else:
-			current_speed = clamp(current_speed, -effective_max_speed * 0.5, effective_max_speed)
-	
-	# Apply braking
-	elif input_brake:
-		var brake_mod = tires.get_braking_modifier()
-		var brake_force = brake_strength * brake_mod * delta
-		
-		if abs(current_speed) > brake_force:
-			current_speed -= sign(current_speed) * brake_force
-		else:
-			current_speed = 0.0
-	
-	# Apply friction
-	else:
-		var friction_force = base_friction * delta
-		
-		# Gravity affects friction on slopes
-		if check_road_properties and current_gravity != 50:
-			if current_gravity < 50 and current_speed > 0:
-				friction_force *= 0.5 + (current_gravity / 100.0)
-			elif current_gravity > 50 and current_speed > 0:
-				friction_force *= 1.0 + ((current_gravity - 50) / 50.0)
-		
-		if abs(current_speed) > friction_force:
-			current_speed -= sign(current_speed) * friction_force
-		else:
-			current_speed = 0.0
-	
-	# Steering (only when moving)
-	if abs(current_speed) > 10 and input_horizontal != 0:
-		# Get steering stability from tires
-		var steering_mod = tires.get_steering_stability(abs(current_speed))
-		
-		# Turn rate depends on speed
-		var speed_factor = 1.0 - (abs(current_speed) / effective_max_speed) * 0.5
-		var turn_amount = input_horizontal * effective_turn_speed * steering_mod * speed_factor * delta * sign(current_speed)
-		
-		# Apply special power source effects
-		match power_source.source_type:
-			PowerSource.SourceType.PSYCHIC:
-				# More responsive to driver's intent
-				turn_amount *= 1.0 + power_source.psychic_resonance * 0.5
-			PowerSource.SourceType.CHAOS:
-				# Random steering wobble
-				turn_amount += randf_range(-0.1, 0.1) * delta
-		
-		visual_rotation += turn_amount
-		movement_angle += turn_amount
 
 func apply_movement(delta):
 	# Calculate movement direction

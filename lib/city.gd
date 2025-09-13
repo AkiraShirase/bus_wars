@@ -6,7 +6,30 @@ extends Node2D
 # A reference to the Camera2D child node.
 @onready var camera_2d = $Camera2D
 
+# Driver and vehicle properties
+var driver: Driver
+var vehicle: Vehicle
+
+# Controllers
+var _player_controller: PlayerController
+var _steering_controller: DefaultController
+
+func _ready():
+	# Initialize components
+	driver = Driver.new()
+	_player_controller = PlayerController.new()
+	_steering_controller = DefaultController.new()
+	
+	# Find vehicle in scene (assuming it exists)
+	vehicle = find_child("CharacterBody2D") as Vehicle
+
 func _process(delta):
+	# Update driver input
+	_player_controller.update(Input, driver)
+	
+	# Update vehicle steering
+	if vehicle:
+		_steering_controller.steer(driver, vehicle)
 	# Start with a zero vector for velocity.
 	#var velocity = Vector2.ZERO
 	# Handle horizontal movement (x-axis).

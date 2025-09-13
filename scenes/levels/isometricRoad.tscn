@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bldrnwcvjqqyo"]
 
-[ext_resource type="Script" uid="uid://bf2muufah5qbv" path="res://levels/isometricRoad.gd" id="1_mem46"]
+[ext_resource type="Script" uid="uid://bf2muufah5qbv" path="res://lib/isometricRoad.gd" id="1_mem46"]
 
 [node name="Line2D" type="Line2D"]
 width = 60.0

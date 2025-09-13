@@ -54,7 +54,7 @@ var engine_label: HBoxContainer
 var weight_label: HBoxContainer
 
 # Reference to bus
-var bus: Bus = null
+var bus: Vehicle = null
 
 # Window state
 var is_dragging: bool = false
@@ -442,7 +442,7 @@ func _on_viewport_size_changed():
 		set_window_position(default_position)
 
 # Public methods
-func set_bus(new_bus: Bus):
+func set_bus(new_bus: Vehicle):
 	bus = new_bus
 
 func snap_to_corner(corner: String):

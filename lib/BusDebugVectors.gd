@@ -21,7 +21,7 @@ class_name BusDebugVectors
 @export var ui_window_scene: PackedScene  # Optional custom UI window scene
 
 # Reference to the bus
-var bus: Bus = null
+var bus: Vehicle = null
 var debug_ui: BusDebugUI = null
 
 # Cached values for smooth display
