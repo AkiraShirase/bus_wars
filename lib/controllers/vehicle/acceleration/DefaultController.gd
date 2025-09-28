@@ -1,18 +1,23 @@
-extends Node
-class_name AccelerationDefaultController
+extends VehicleAccelerationController
+class_name VehicleAccelerationDefaultController
 
 const acceleration: float = 100.0
-const deceleration: float = 100.0
+const deceleration: float = -100.0
+const stop: float = 10
 
 func accelerate(vehicle: GameVehicle, driver: Driver) -> void:
+	var amount = stop if vehicle.current_speed < 0 else -stop
 	if driver.accelerating > 0:
-		vehicle.current_speed += acceleration * vehicle.get_process_delta_time()
-		if vehicle.current_speed > vehicle.effective_max_speed:
-			vehicle.current_speed = vehicle.effective_max_speed
+		amount = acceleration
 	if driver.stopping > 0:
-		vehicle.current_speed -= deceleration * vehicle.get_process_delta_time()
-		if vehicle.current_speed < 0 && abs(vehicle.current_speed) > vehicle.effective_max_speed:
-			vehicle.current_speed = -vehicle.effective_max_speed
+		amount = deceleration
 	
-	vehicle.direction = Vector2.RIGHT.rotated(vehicle.movement_angle)
-	vehicle.velocity = vehicle.direction * vehicle.current_speed
+	var new_speed = vehicle.current_speed + amount	
+	if new_speed > vehicle.effective_max_speed:
+		amount = vehicle.effective_max_speed - vehicle.current_speed
+	elif new_speed < 0 and vehicle.stopping:
+		return
+	elif new_speed < -vehicle.effective_max_speed:
+		amount = vehicle.effective_max_speed + vehicle.current_speed
+	
+	vehicle.change_speed(amount)

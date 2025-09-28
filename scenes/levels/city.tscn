@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://dtunvn6ti05no"]
+[gd_scene load_steps=27 format=3 uid="uid://dtunvn6ti05no"]
 
 [ext_resource type="Script" uid="uid://7dbb3nl75cp5" path="res://lib/city.gd" id="1_nqxve"]
 [ext_resource type="PackedScene" uid="uid://bsm1d6k3q45ei" path="res://scenes/levels/background_terrain.tscn" id="1_wpki0"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" uid="uid://ba41fov5rrauq" path="res://lib/resources/TireMaterial.gd" id="6_hij54"]
 [ext_resource type="Script" uid="uid://dw32mardp3sh3" path="res://lib/resources/EnginePower.gd" id="7_vip6u"]
 [ext_resource type="Script" uid="uid://btg20s4ud1ukv" path="res://lib/resources/PowerSource.gd" id="8_6yjkx"]
+[ext_resource type="Script" uid="uid://bxiadwp0xfi2j" path="res://lib/BusDebugUI.gd" id="11_th6ie"]
+[ext_resource type="Script" uid="uid://cix2aphta1qri" path="res://lib/BusDebugVectors.gd" id="12_rbmub"]
 
 [sub_resource type="Resource" id="Resource_3vlvf"]
 script = ExtResource("4_qjkv1")
@@ -35,6 +37,9 @@ script = ExtResource("8_6yjkx")
 source_type = 0
 metadata/_custom_type_script = "uid://btg20s4ud1ukv"
 
+[sub_resource type="PackedScene" id="PackedScene_rbmub"]
+resource_local_to_scene = true
+
 [sub_resource type="Resource" id="Resource_5qyid"]
 script = ExtResource("6_5qyid")
 metadata/_custom_type_script = "uid://rpmqkoap6o3w"
@@ -58,6 +63,8 @@ gravity = 10
 [sub_resource type="Resource" id="Resource_hij54"]
 script = ExtResource("6_5qyid")
 gravity = 70
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_th6ie"]
 
 [node name="city" type="Node2D" node_paths=PackedStringArray("vehicle")]
 y_sort_enabled = true
@@ -84,6 +91,11 @@ tires = SubResource("Resource_jnk42")
 engine = SubResource("Resource_h6v6v")
 power_source = SubResource("Resource_csyog")
 start_direction = 6
+
+[node name="Node2D" type="Node2D" parent="truck" node_paths=PackedStringArray("bus")]
+script = ExtResource("12_rbmub")
+ui_window_scene = SubResource("PackedScene_rbmub")
+bus = NodePath("..")
 
 [node name="Road" parent="." groups=["roads"] instance=ExtResource("5_5qyid")]
 position = Vector2(5, -65)
@@ -117,3 +129,15 @@ polygon = PackedVector2Array(-514.181, 1058.51, -458.954, 1173.98, -449.467, 117
 [node name="EndCapEnd2" type="Polygon2D" parent="Road"]
 color = Color(0.0557858, 0.163021, 0.216079, 1)
 polygon = PackedVector2Array(-1343.42, 1000.89, -1289.78, 1117.11, -1299.26, 1120.27, -1352.9, 1004.06)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer" node_paths=PackedStringArray("bus")]
+offset_left = -1201.0
+offset_top = 963.0
+offset_right = -1161.0
+offset_bottom = 1003.0
+script = ExtResource("11_th6ie")
+default_position = 2
+panel_style = SubResource("StyleBoxFlat_th6ie")
+bus = NodePath("../../truck")

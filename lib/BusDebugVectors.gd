@@ -7,7 +7,7 @@ class_name BusDebugVectors
 @export var show_velocity_vector: bool = true
 @export var show_direction_vector: bool = true
 @export var show_movement_vector: bool = true
-@export var vector_scale: float = 1.0
+@export var vector_scale: float = 0.6
 
 # Vector colors
 @export_group("Vector Colors")
@@ -18,10 +18,10 @@ class_name BusDebugVectors
 # UI Window
 @export_group("Debug UI")
 @export var use_ui_window: bool = true
-@export var ui_window_scene: PackedScene  # Optional custom UI window scene
+@export var ui_window_scene: PackedScene = null
 
 # Reference to the bus
-var bus: Vehicle = null
+@export var bus: GameVehicle
 var debug_ui: BusDebugUI = null
 
 # Cached values for smooth display
@@ -31,7 +31,7 @@ var smooth_speed: float = 0.0
 func _ready():
 	# Try to find parent bus
 	var parent = get_parent()
-	if parent is Bus:
+	if parent is GameVehicle:
 		bus = parent
 		# Add bus to group for easier finding
 		bus.add_to_group("buses")
@@ -66,7 +66,6 @@ func create_debug_ui():
 		debug_ui = BusDebugUI.new()
 		debug_ui.set_bus(bus)
 		# Ensure it starts in top right corner
-		debug_ui.default_position = "top_right"
 		debug_ui.margin = Vector2(10, 10)
 		canvas_layer.add_child(debug_ui)
 
@@ -112,7 +111,7 @@ func _process(delta):
 		return
 	
 	# Smooth velocity for display
-	smooth_velocity = smooth_velocity.lerp(bus.velocity, delta * 10.0)
+	smooth_velocity = smooth_velocity.lerp(bus.velocity, bus.get_process_delta_time() * 10.0)
 	smooth_speed = lerp(smooth_speed, bus.velocity.length(), delta * 10.0)
 	
 	# Request redraw for vectors

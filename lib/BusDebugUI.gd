@@ -2,12 +2,14 @@
 extends PanelContainer
 class_name BusDebugUI
 
+enum WindowPosition { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, CUSTOM }
+
 # Window settings
 @export_group("Window")
 @export var window_title: String = "Bus Debug Info"
 @export var draggable: bool = true
 @export var resizable: bool = true
-@export var default_position: String = "top_right"  # top_left, top_right, bottom_left, bottom_right, custom
+@export var default_position: WindowPosition = WindowPosition.TOP_LEFT
 @export var custom_position: Vector2 = Vector2(10, 10)
 @export var margin: Vector2 = Vector2(10, 10)  # Margin from screen edges
 @export var start_size: Vector2 = Vector2(300, 400)
@@ -31,6 +33,8 @@ class_name BusDebugUI
 @export var warning_color: Color = Color.YELLOW
 @export var critical_color: Color = Color.RED
 
+@export var bus: GameVehicle = null
+
 # UI Elements
 var title_bar: Panel
 var title_label: Label
@@ -46,6 +50,7 @@ var special_section: VBoxContainer
 
 # Labels for dynamic content
 var speed_label: HBoxContainer
+var steer_label: HBoxContainer
 var fuel_label: HBoxContainer
 var passenger_label: HBoxContainer
 var gravity_label: HBoxContainer
@@ -54,7 +59,7 @@ var engine_label: HBoxContainer
 var weight_label: HBoxContainer
 
 # Reference to bus
-var bus: GameVehicle = null
+#var bus: GameVehicle = null
 
 # Window state
 var is_dragging: bool = false
@@ -95,19 +100,19 @@ func setup_panel_style():
 	
 	add_theme_stylebox_override("panel", panel_style)
 
-func set_window_position(position_preset: String):
+func set_window_position(position_preset: WindowPosition):
 	var viewport_size = get_viewport().get_visible_rect().size
 	
 	match position_preset:
-		"top_left":
+		WindowPosition.TOP_LEFT:
 			position = margin
-		"top_right":
+		WindowPosition.TOP_RIGHT:
 			position = Vector2(viewport_size.x - size.x - margin.x, margin.y)
-		"bottom_left":
+		WindowPosition.BOTTOM_LEFT:
 			position = Vector2(margin.x, viewport_size.y - size.y - margin.y)
-		"bottom_right":
+		WindowPosition.BOTTOM_RIGHT:
 			position = Vector2(viewport_size.x - size.x - margin.x, viewport_size.y - size.y - margin.y)
-		"custom":
+		WindowPosition.CUSTOM:
 			position = custom_position
 		_:
 			# Default to top right
@@ -155,7 +160,6 @@ func create_title_bar(parent: VBoxContainer):
 	
 	var title_style = StyleBoxFlat.new()
 	title_style.bg_color = header_color
-	title_style.set_corner_radius_individual(5, 5, 0, 0)
 	title_bar.add_theme_stylebox_override("panel", title_style)
 	
 	parent.add_child(title_bar)
@@ -198,7 +202,10 @@ func create_performance_section():
 	
 	speed_label = create_info_label("Speed", "0 km/h")
 	performance_section.add_child(speed_label)
-	
+
+	steer_label = create_info_label("Steer", "0,0")
+	performance_section.add_child(steer_label)
+
 	gravity_label = create_info_label("Gravity", "50")
 	performance_section.add_child(gravity_label)
 	
@@ -294,7 +301,7 @@ func _gui_input(event):
 					is_dragging = true
 					drag_offset = local_pos
 					# When user starts dragging, switch to custom position mode
-					default_position = "custom"
+					default_position = WindowPosition.CUSTOM
 				elif resize_handle and resize_handle.get_rect().has_point(local_pos) and resizable:
 					is_resizing = true
 					drag_offset = event.position
@@ -343,7 +350,12 @@ func update_content():
 		elif speed_kmh > 120:
 			speed_color = critical_color
 		update_label_value(speed_label, "%d km/h" % speed_kmh, speed_color)
-	
+	if steer_label:
+		var move_value = int(bus.movement_angle * 100)
+		var steer_value = int(bus.visual_rotation * 100)
+		var steer_color = value_color
+		update_label_value(steer_label, "%d,%d" % [move_value, steer_value], steer_color)
+
 	if gravity_label and bus.check_road_properties:
 		var gravity_color = value_color
 		var gravity_text = str(bus.current_gravity)
@@ -438,14 +450,14 @@ func _on_close_pressed():
 
 func _on_viewport_size_changed():
 	# Reposition window if it's anchored to a corner
-	if default_position != "custom" and not is_dragging:
+	if default_position != WindowPosition.CUSTOM and not is_dragging:
 		set_window_position(default_position)
 
 # Public methods
 func set_bus(new_bus: GameVehicle):
 	bus = new_bus
 
-func snap_to_corner(corner: String):
+func snap_to_corner(corner: WindowPosition):
 	default_position = corner
 	set_window_position(corner)
 

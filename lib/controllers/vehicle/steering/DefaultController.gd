@@ -1,18 +1,12 @@
-extends Node
-class_name DefaultController
+extends VehicleSteeringController
+class_name VehicleSteeringDefaultController
 
 const _turn_amount: float = 2.0
 
 func steer(driver: Driver, vehicle: GameVehicle) -> void:
-	if driver.steering > 50:
-		_turn_right(vehicle)
-	elif driver.steering < 50:
-		_turn_left(vehicle)
+	if driver.steering == 50:
+		return
 
-func _turn_right(vehicle: GameVehicle) -> void:
-	vehicle.visual_rotation += _turn_amount * get_process_delta_time()
-	vehicle.movement_angle += _turn_amount * get_process_delta_time()
-
-func _turn_left(vehicle: GameVehicle) -> void:
-	vehicle.visual_rotation -= _turn_amount * get_process_delta_time()
-	vehicle.movement_angle -= _turn_amount * get_process_delta_time()
+	var delta = _turn_amount if driver.steering > 50 else -_turn_amount
+	vehicle.direct(delta)
+	vehicle.steer(vehicle.visual_rotation + (delta * vehicle.get_process_delta_time()))
