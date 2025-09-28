@@ -54,7 +54,7 @@ var engine_label: HBoxContainer
 var weight_label: HBoxContainer
 
 # Reference to bus
-var bus: Vehicle = null
+var bus: GameVehicle = null
 
 # Window state
 var is_dragging: bool = false
@@ -273,7 +273,7 @@ func find_bus():
 	# Try to find bus in parent hierarchy
 	var parent = get_parent()
 	while parent:
-		if parent is Bus:
+		if parent is GameVehicle:
 			bus = parent
 			break
 		parent = parent.get_parent()
@@ -281,7 +281,7 @@ func find_bus():
 	# If not found, search the scene
 	if not bus:
 		var buses = get_tree().get_nodes_in_group("buses")
-		if buses.size() > 0 and buses[0] is Bus:
+		if buses.size() > 0 and buses[0] is GameVehicle:
 			bus = buses[0]
 
 func _gui_input(event):
@@ -442,7 +442,7 @@ func _on_viewport_size_changed():
 		set_window_position(default_position)
 
 # Public methods
-func set_bus(new_bus: Vehicle):
+func set_bus(new_bus: GameVehicle):
 	bus = new_bus
 
 func snap_to_corner(corner: String):

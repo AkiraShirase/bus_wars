@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://coa1meb65p5hb"]
 
-[ext_resource type="Script" uid="uid://dd7uutexyl3q5" path="res://lib/vehicle.gd" id="1_b1v4d"]
+[ext_resource type="Script" uid="uid://dd7uutexyl3q5" path="res://lib/GameVehicle.gd" id="1_b1v4d"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_b1v4d"]
 radius = 16.0

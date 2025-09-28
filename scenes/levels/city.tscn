@@ -1,5 +1,6 @@
-[gd_scene load_steps=22 format=3 uid="uid://dtunvn6ti05no"]
+[gd_scene load_steps=23 format=3 uid="uid://dtunvn6ti05no"]
 
+[ext_resource type="Script" uid="uid://7dbb3nl75cp5" path="res://lib/city.gd" id="1_nqxve"]
 [ext_resource type="PackedScene" uid="uid://bsm1d6k3q45ei" path="res://scenes/levels/background_terrain.tscn" id="1_wpki0"]
 [ext_resource type="Script" uid="uid://ve1w35qugl3h" path="res://lib/camera_2d.gd" id="4_js2ni"]
 [ext_resource type="Script" uid="uid://ckwd6dakpi5tj" path="res://lib/resources/BusMaterial.gd" id="4_qjkv1"]
@@ -15,93 +16,53 @@
 script = ExtResource("4_qjkv1")
 material_type = 4
 base_weight_multiplier = 0.1
-durability = 100.0
-corrosion_resistance = 50.0
 metadata/_custom_type_script = "uid://ckwd6dakpi5tj"
 
 [sub_resource type="Resource" id="Resource_4dbnt"]
 script = ExtResource("5_icvb7")
-section_count = 1
-seats_per_section = 30
-standing_room_per_section = 10
-luxury_level = 0.5
-weight_per_section = 2000.0
 metadata/_custom_type_script = "uid://r6vwn61n00ht"
 
 [sub_resource type="Resource" id="Resource_jnk42"]
 script = ExtResource("6_hij54")
-tire_type = 0
-wear_level = 100.0
-pressure = 100.0
-temperature = 20.0
 metadata/_custom_type_script = "uid://ba41fov5rrauq"
 
 [sub_resource type="Resource" id="Resource_h6v6v"]
 script = ExtResource("7_vip6u")
-base_power = 200.0
-torque = 500.0
-efficiency = 0.85
-rpm_min = 800.0
-rpm_max = 4000.0
-rpm_optimal = 2500.0
 metadata/_custom_type_script = "uid://dw32mardp3sh3"
 
 [sub_resource type="Resource" id="Resource_csyog"]
 script = ExtResource("8_6yjkx")
 source_type = 0
-fuel_capacity = 100.0
-current_fuel = 100.0
-refuel_rate = 50.0
-psychic_resonance = 1.0
-chaos_stability = 0.5
-alien_core_health = 100.0
 metadata/_custom_type_script = "uid://btg20s4ud1ukv"
 
 [sub_resource type="Resource" id="Resource_5qyid"]
 script = ExtResource("6_5qyid")
-gravity = 50
-health = 100.0
-pollution = 0.0
-sewer_percent = 100.0
 metadata/_custom_type_script = "uid://rpmqkoap6o3w"
 
 [sub_resource type="Resource" id="Resource_2yfp6"]
 script = ExtResource("6_5qyid")
 gravity = 30
-health = 100.0
-pollution = 0.0
-sewer_percent = 100.0
 
 [sub_resource type="Resource" id="Resource_wj04a"]
 script = ExtResource("6_5qyid")
 gravity = 90
-health = 100.0
-pollution = 0.0
-sewer_percent = 100.0
 
 [sub_resource type="Resource" id="Resource_qjkv1"]
 script = ExtResource("6_5qyid")
 gravity = 70
-health = 100.0
-pollution = 0.0
-sewer_percent = 100.0
 
 [sub_resource type="Resource" id="Resource_icvb7"]
 script = ExtResource("6_5qyid")
 gravity = 10
-health = 100.0
-pollution = 0.0
-sewer_percent = 100.0
 
 [sub_resource type="Resource" id="Resource_hij54"]
 script = ExtResource("6_5qyid")
 gravity = 70
-health = 100.0
-pollution = 0.0
-sewer_percent = 100.0
 
-[node name="city" type="Node2D"]
+[node name="city" type="Node2D" node_paths=PackedStringArray("vehicle")]
 y_sort_enabled = true
+script = ExtResource("1_nqxve")
+vehicle = NodePath("truck")
 
 [node name="background_terrain" parent="." instance=ExtResource("1_wpki0")]
 visible = false
@@ -126,7 +87,7 @@ start_direction = 6
 
 [node name="Road" parent="." groups=["roads"] instance=ExtResource("5_5qyid")]
 position = Vector2(5, -65)
-points = PackedVector2Array(-486.567, 1116.25, -1144.87, 1431.08, -2003.52, 1001.76, -1345.22, 686.921, -944.514, 887.273, -1316.6, 1059)
+points = PackedVector2Array(-486.56738, 1116.2456, -1144.8655, 1431.0845, -2003.516, 1001.76025, -1345.2179, 686.92126, -944.51434, 887.27264, -1316.5958, 1059.0029)
 width = 128.0
 default_color = Color(0.0557858, 0.163021, 0.216079, 1)
 road_width = 128.0

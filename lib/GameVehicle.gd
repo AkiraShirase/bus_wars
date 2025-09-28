@@ -1,5 +1,5 @@
 extends CharacterBody2D
-class_name Vehicle
+class_name GameVehicle
 
 # Component Resources
 @export_group("Bus Components")
@@ -33,6 +33,7 @@ class_name Vehicle
 # Initial direction
 enum StartDirection { EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, NORTH, NORTHEAST }
 @export var start_direction: StartDirection = StartDirection.EAST
+@export var direction: Vector2
 
 # Auto-detected values
 var isometric_angle: float = 26.565
@@ -113,8 +114,6 @@ func update_components(delta):
 	
 	# Consume fuel
 	var fuel_consumption = engine.calculate_fuel_consumption(power_source.get_source_name(), 0.0)
-	if not power_source.consume_fuel(fuel_consumption, delta):
-		# Out of fuel!
 
 func update_bus_properties():
 	# Calculate total weight
@@ -146,15 +145,6 @@ func apply_movement(delta):
 	
 	# Apply velocity
 	velocity = direction * current_speed
-	
-	# Apply special power source movement effects
-	match power_source.source_type:
-		PowerSource.SourceType.ALIEN:
-			# Slight hover effect - reduced friction
-			velocity *= 1.0 + (power_source.alien_core_health / 100.0) * 0.2
-		PowerSource.SourceType.CHAOS:
-			# Random velocity fluctuations
-			velocity *= randf_range(0.9, 1.1)
 	
 	# Smooth the movement angle toward visual rotation
 	if abs(current_speed) > 10:

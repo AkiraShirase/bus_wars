@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerController
 
-func update(input: Input, driver: Driver) -> void:
+func update(driver: Driver) -> void:
 	_update_acceleration(driver)
 	_update_steering(driver)
 	_update_stopping(driver)

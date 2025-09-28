@@ -2,34 +2,35 @@ extends Node2D
 
 # The speed at which the camera moves on the x and y axes.
 @export var move_speed = 400.0
+@export var vehicle: GameVehicle
 
 # A reference to the Camera2D child node.
 @onready var camera_2d = $Camera2D
 
 # Driver and vehicle properties
 var driver: Driver
-var vehicle: Vehicle
 
 # Controllers
 var _player_controller: PlayerController
 var _steering_controller: DefaultController
+var _accel_controller: AccelerationDefaultController
 
 func _ready():
 	# Initialize components
 	driver = Driver.new()
 	_player_controller = PlayerController.new()
 	_steering_controller = DefaultController.new()
-	
-	# Find vehicle in scene (assuming it exists)
-	vehicle = find_child("CharacterBody2D") as Vehicle
+	_accel_controller = AccelerationDefaultController.new()
 
 func _process(delta):
 	# Update driver input
-	_player_controller.update(Input, driver)
+	_player_controller.update(driver)
 	
 	# Update vehicle steering
 	if vehicle:
 		_steering_controller.steer(driver, vehicle)
+		_accel_controller.accelerate(vehicle, driver)
+		
 	# Start with a zero vector for velocity.
 	#var velocity = Vector2.ZERO
 	# Handle horizontal movement (x-axis).
