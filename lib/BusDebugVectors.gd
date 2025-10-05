@@ -15,14 +15,8 @@ class_name BusDebugVectors
 @export var direction_color: Color = Color.BLUE
 @export var movement_color: Color = Color.YELLOW
 
-# UI Window
-@export_group("Debug UI")
-@export var use_ui_window: bool = true
-@export var ui_window_scene: PackedScene = null
-
 # Reference to the bus
 @export var bus: GameVehicle
-var debug_ui: BusDebugUI = null
 
 # Cached values for smooth display
 var smooth_velocity: Vector2 = Vector2.ZERO
@@ -40,34 +34,6 @@ func _ready():
 	
 	# Set to top of rendering for vectors
 	z_index = 100
-	
-	# Create UI window if enabled
-	if use_ui_window:
-		create_debug_ui()
-
-func create_debug_ui():
-	# Check if UI already exists
-	var canvas_layer = get_tree().get_root().find_child("DebugCanvasLayer", false, false)
-	if not canvas_layer:
-		canvas_layer = CanvasLayer.new()
-		canvas_layer.name = "DebugCanvasLayer"
-		canvas_layer.layer = 128  # High layer for UI
-		get_tree().get_root().add_child(canvas_layer)
-	
-	# Create UI from scene or default
-	if ui_window_scene:
-		var instance = ui_window_scene.instantiate()
-		if instance is BusDebugUI:
-			debug_ui = instance
-			canvas_layer.add_child(debug_ui)
-			debug_ui.set_bus(bus)
-	else:
-		# Create default UI
-		debug_ui = BusDebugUI.new()
-		debug_ui.set_bus(bus)
-		# Ensure it starts in top right corner
-		debug_ui.margin = Vector2(10, 10)
-		canvas_layer.add_child(debug_ui)
 
 func _draw():
 	if not bus:
@@ -118,14 +84,6 @@ func _process(delta):
 	queue_redraw()
 
 # Public methods
-func toggle_ui():
-	if debug_ui:
-		debug_ui.visible = !debug_ui.visible
-
-func set_ui_position(pos: Vector2):
-	if debug_ui:
-		debug_ui.position = pos
-
 func toggle_vectors(vector_type: String):
 	match vector_type:
 		"velocity":
@@ -147,7 +105,6 @@ static func create_minimal():
 	debug.show_velocity_vector = true
 	debug.show_direction_vector = false
 	debug.show_movement_vector = false
-	debug.use_ui_window = true
 	return debug
 
 static func create_full():
@@ -156,5 +113,4 @@ static func create_full():
 	debug.show_velocity_vector = true
 	debug.show_direction_vector = true
 	debug.show_movement_vector = true
-	debug.use_ui_window = true
 	return debug
