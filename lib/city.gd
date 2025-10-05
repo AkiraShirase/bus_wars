@@ -4,6 +4,7 @@ extends Node2D
 @export var move_speed = 400.0
 @export var vehicle: GameVehicle
 @export var debug: BusDebugVectors
+@export var level: BusLevel
 
 # A reference to the Camera2D child node.
 @onready var camera_2d = $Camera2D
@@ -15,6 +16,7 @@ var driver: Driver
 var _player_controller: PlayerController
 var _steering_controller: VehicleSteeringController
 var _accel_controller: VehicleAccelerationController
+var _level_controller: LevelController
 
 func _ready():
 	# Initialize components
@@ -22,6 +24,7 @@ func _ready():
 	_player_controller = PlayerController.new()
 	_steering_controller = VehicleSteeringDefaultController.new()
 	_accel_controller = VehicleAccelerationDefaultController.new()
+	_level_controller = LevelController.new()
 
 func _process(delta):
 	# Update driver input
@@ -32,6 +35,9 @@ func _process(delta):
 		_steering_controller.steer(driver, vehicle)
 		_accel_controller.accelerate(vehicle, driver)
 		_steering_controller.steer(driver, vehicle)
+
+	if level:
+		_level_controller.init(level)
 		
 	# Start with a zero vector for velocity.
 	#var velocity = Vector2.ZERO

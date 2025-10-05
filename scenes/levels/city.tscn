@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://dtunvn6ti05no"]
+[gd_scene load_steps=20 format=3 uid="uid://dtunvn6ti05no"]
 
 [ext_resource type="Script" uid="uid://7dbb3nl75cp5" path="res://lib/city.gd" id="1_nqxve"]
 [ext_resource type="PackedScene" uid="uid://bsm1d6k3q45ei" path="res://scenes/levels/background_terrain.tscn" id="1_wpki0"]
@@ -7,12 +7,12 @@
 [ext_resource type="PackedScene" uid="uid://bldrnwcvjqqyo" path="res://scenes/levels/isometricRoad.tscn" id="5_5qyid"]
 [ext_resource type="Script" uid="uid://r6vwn61n00ht" path="res://lib/resources/PassengerSection.gd" id="5_icvb7"]
 [ext_resource type="PackedScene" uid="uid://coa1meb65p5hb" path="res://scenes/player/truck.tscn" id="5_js2ni"]
-[ext_resource type="Script" uid="uid://rpmqkoap6o3w" path="res://lib/resources/RoadPointData.gd" id="6_5qyid"]
 [ext_resource type="Script" uid="uid://ba41fov5rrauq" path="res://lib/resources/TireMaterial.gd" id="6_hij54"]
 [ext_resource type="Script" uid="uid://dw32mardp3sh3" path="res://lib/resources/EnginePower.gd" id="7_vip6u"]
 [ext_resource type="Script" uid="uid://btg20s4ud1ukv" path="res://lib/resources/PowerSource.gd" id="8_6yjkx"]
 [ext_resource type="Script" uid="uid://bxiadwp0xfi2j" path="res://lib/BusDebugUI.gd" id="11_th6ie"]
 [ext_resource type="Script" uid="uid://cix2aphta1qri" path="res://lib/BusDebugVectors.gd" id="12_rbmub"]
+[ext_resource type="Script" uid="uid://qqurjhdm1k4w" path="res://lib/BusLevel.gd" id="14_7sqln"]
 
 [sub_resource type="Resource" id="Resource_3vlvf"]
 script = ExtResource("4_qjkv1")
@@ -37,50 +37,15 @@ script = ExtResource("8_6yjkx")
 source_type = 0
 metadata/_custom_type_script = "uid://btg20s4ud1ukv"
 
-[sub_resource type="PackedScene" id="PackedScene_rbmub"]
-resource_local_to_scene = true
-
-[sub_resource type="Resource" id="Resource_5qyid"]
-script = ExtResource("6_5qyid")
-metadata/_custom_type_script = "uid://rpmqkoap6o3w"
-
-[sub_resource type="Resource" id="Resource_2yfp6"]
-script = ExtResource("6_5qyid")
-gravity = 30
-
-[sub_resource type="Resource" id="Resource_wj04a"]
-script = ExtResource("6_5qyid")
-gravity = 90
-
-[sub_resource type="Resource" id="Resource_qjkv1"]
-script = ExtResource("6_5qyid")
-gravity = 70
-
-[sub_resource type="Resource" id="Resource_icvb7"]
-script = ExtResource("6_5qyid")
-gravity = 10
-
-[sub_resource type="Resource" id="Resource_hij54"]
-script = ExtResource("6_5qyid")
-gravity = 70
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_th6ie"]
 
-[node name="city" type="Node2D" node_paths=PackedStringArray("vehicle")]
+[node name="city" type="Node2D" node_paths=PackedStringArray("vehicle", "level")]
 y_sort_enabled = true
 script = ExtResource("1_nqxve")
 vehicle = NodePath("truck")
+level = NodePath("Level")
 
 [node name="background_terrain" parent="." instance=ExtResource("1_wpki0")]
-visible = false
-
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(-547, 763)
-enabled = false
-zoom = Vector2(0.4, 0.4)
-script = ExtResource("4_js2ni")
-target_path = NodePath("../truck")
-zoom_level = Vector2(1.5, 1.5)
 
 [node name="truck" parent="." instance=ExtResource("5_js2ni")]
 z_index = 3
@@ -90,25 +55,23 @@ passenger_section = SubResource("Resource_4dbnt")
 tires = SubResource("Resource_jnk42")
 engine = SubResource("Resource_h6v6v")
 power_source = SubResource("Resource_csyog")
-start_direction = 6
+start_direction = 2
 
 [node name="Node2D" type="Node2D" parent="truck" node_paths=PackedStringArray("bus")]
 script = ExtResource("12_rbmub")
-ui_window_scene = SubResource("PackedScene_rbmub")
 bus = NodePath("..")
 
+[node name="Camera2D" type="Camera2D" parent="truck"]
+position = Vector2(654, -200)
+enabled = false
+zoom = Vector2(0.4, 0.4)
+script = ExtResource("4_js2ni")
+target_path = NodePath("..")
+zoom_level = Vector2(1.5, 1.5)
+
 [node name="Road" parent="." groups=["roads"] instance=ExtResource("5_5qyid")]
+visible = false
 position = Vector2(5, -65)
-points = PackedVector2Array(-486.56738, 1116.2456, -1144.8655, 1431.0845, -2003.516, 1001.76025, -1345.2179, 686.92126, -944.51434, 887.27264, -1316.5958, 1059.0029)
-width = 128.0
-default_color = Color(0.0557858, 0.163021, 0.216079, 1)
-road_width = 128.0
-road_color = Color(0.0557858, 0.163021, 0.216079, 1)
-sidewalk_width = 32.0
-sidewalk_color = Color(1, 0.357369, 0.0475251, 1)
-point_data = Array[ExtResource("6_5qyid")]([SubResource("Resource_5qyid"), SubResource("Resource_2yfp6"), SubResource("Resource_wj04a"), SubResource("Resource_qjkv1"), SubResource("Resource_icvb7"), SubResource("Resource_hij54")])
-grid_size = 64.0
-grid_color = Color(0.915812, 0, 0.419096, 1)
 
 [node name="SidewalkLeft2" type="Line2D" parent="Road"]
 z_index = -1
@@ -141,3 +104,8 @@ script = ExtResource("11_th6ie")
 default_position = 2
 panel_style = SubResource("StyleBoxFlat_th6ie")
 bus = NodePath("../../truck")
+
+[node name="Level" type="Node2D" parent="."]
+script = ExtResource("14_7sqln")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Level"]
