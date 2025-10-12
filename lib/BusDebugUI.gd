@@ -352,9 +352,13 @@ func update_content():
 		update_label_value(speed_label, "%d km/h" % speed_kmh, speed_color)
 	if steer_label:
 		var move_value = int(bus.movement_angle * 100)
-		var steer_value = int(bus.visual_rotation * 100)
+		var steer_value = int(rad_to_deg(bus.rotation))
 		var steer_color = value_color
-		update_label_value(steer_label, "%d,%d" % [move_value, steer_value], steer_color)
+		update_label_value(
+			steer_label, 
+			"%d,%d,%s" % [move_value, steer_value, bus.isometric_angle], 
+			steer_color,
+		)
 
 	if gravity_label and bus.check_road_properties:
 		var gravity_color = value_color

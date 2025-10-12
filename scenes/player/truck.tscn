@@ -11,7 +11,7 @@ script = ExtResource("1_b1v4d")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-1, -1)
-rotation = 1.5708
+rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_b1v4d")
 
 [node name="truck" type="Node2D" parent="."]

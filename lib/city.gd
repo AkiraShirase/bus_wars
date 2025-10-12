@@ -14,17 +14,19 @@ var driver: Driver
 
 # Controllers
 var _player_controller: PlayerController
-var _steering_controller: VehicleSteeringController
-var _accel_controller: VehicleAccelerationController
+var _vehicle_controller: VehicleController
 var _level_controller: LevelController
 
 func _ready():
 	# Initialize components
 	driver = Driver.new()
 	_player_controller = PlayerController.new()
-	_steering_controller = VehicleSteeringDefaultController.new()
-	_accel_controller = VehicleAccelerationDefaultController.new()
-	_level_controller = LevelController.new()
+	_vehicle_controller = VehicleController.new(
+		VehicleAccelerationDefaultController.new(),
+		VehicleSteeringDefaultController.new(),
+	)
+	if vehicle:
+		_vehicle_controller.initialize_vehicle(vehicle)
 
 func _process(delta):
 	# Update driver input
@@ -32,9 +34,7 @@ func _process(delta):
 	
 	# Update vehicle steering
 	if vehicle:
-		_steering_controller.steer(driver, vehicle)
-		_accel_controller.accelerate(vehicle, driver)
-		_steering_controller.steer(driver, vehicle)
+		_vehicle_controller.update(vehicle, driver)
 
 	if level:
 		_level_controller.init(level)
