@@ -71,15 +71,6 @@ func _ready():
 	
 	set_physics_process(true)
 
-func world_to_isometric(world_pos: Vector2) -> Vector2:
-	var iso_x = world_pos.x / tile_size.x + world_pos.y / tile_size.y
-	var iso_y = world_pos.y / tile_size.y - world_pos.x / tile_size.x
-	return Vector2(iso_x, iso_y)
-
-func get_tile_position() -> Vector2i:
-	var iso_pos = world_to_isometric(global_position)
-	return Vector2i(round(iso_pos.x), round(iso_pos.y))
-
 # Public methods for game systems
 func add_passengers_at_stop(count: int) -> int:
 	return passenger_section.add_passengers(count)
